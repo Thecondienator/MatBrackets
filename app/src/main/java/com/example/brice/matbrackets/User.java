@@ -19,7 +19,11 @@ public class User {
     }
 
     public boolean checkToken(){
-        return false;
+        if(email.equals("thecondienator@gmail.com")){
+            return true;
+        } else{
+            return false;
+        }
     }
 
     public void setEmail(String email){

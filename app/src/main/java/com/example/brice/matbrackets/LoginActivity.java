@@ -4,6 +4,8 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -30,13 +32,18 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.Socket;
@@ -219,7 +226,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
+            mAuthTask = new UserLoginTask(email, password, this);
             mAuthTask.execute((Void) null);
         }
     }
@@ -330,10 +337,19 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
+        private boolean resultStatus;
+        private String resultEmail;
+        private String resultToken;
+        private String resultFirstName;
+        private String resultLastName;
+        private int resultUserID;
+        private JSONObject resultJSON;
         private final String mEmail;
         private final String mPassword;
+        private Context loginContext;
 
-        UserLoginTask(String email, String password) {
+        UserLoginTask(String email, String password, Context loginContext) {
+            this.loginContext = loginContext;
             mEmail = email;
             mPassword = password;
         }
@@ -367,12 +383,30 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                 DataInputStream input = new DataInputStream(con.getInputStream());
 
-                for(int c = input.read(); c != -1; c = input.read())
-                    System.out.print((char)c);
-                input.close();
+                BufferedReader streamReader = new BufferedReader(new InputStreamReader(input, "UTF-8"));
+                StringBuilder responseStrBuilder = new StringBuilder();
 
-                System.out.println("Resp Code:" + con.getResponseCode());
-                System.out.println("Resp Message:"+con.getResponseMessage());
+                String inputStr = null;
+                while((inputStr = streamReader.readLine()) != null){
+                    responseStrBuilder.append(inputStr);
+                }
+                try {
+                    resultJSON = new JSONObject(responseStrBuilder.toString());
+                    if(resultJSON.getBoolean("status")){
+                        resultStatus = resultJSON.getBoolean("status");
+                        resultEmail = resultJSON.getString("email");
+                        resultToken = resultJSON.getString("mobile_token");
+                        resultFirstName = resultJSON.getString("first_name");
+                        resultLastName = resultJSON.getString("last_name");
+                        resultUserID = resultJSON.getInt("id");
+                    }
+                }catch(JSONException e){
+                    e.printStackTrace();
+                    return false;
+                }
+
+                //System.out.println("Resp Code:" + con.getResponseCode());
+                //System.out.println("Resp Message:"+con.getResponseMessage());
 
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -403,7 +437,19 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
-                finish();
+                if(resultStatus){
+                    SharedPreferences userPrefs = getSharedPreferences("user", 0);
+                    SharedPreferences.Editor editor = userPrefs.edit();
+                    editor.putString("user_email", resultEmail);
+                    editor.putString("user_token", resultToken);
+                    editor.putInt("user_id", resultUserID);
+                    System.out.println("First: "+resultFirstName+", Last: "+resultLastName);
+                    editor.putString("user_first_name", resultFirstName);
+                    editor.putString("user_last_name", resultLastName);
+                    editor.commit();
+                    Intent mainActivityIntent = new Intent(loginContext, MainActivity.class);
+                    startActivity(mainActivityIntent);
+                }
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
