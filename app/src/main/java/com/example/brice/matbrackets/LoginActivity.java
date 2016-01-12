@@ -101,12 +101,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-    private String httpsURL = "https://dev.matbrackets.com/mobile/mobileLogin.php";
+    private String mobileLoginURL = "https://dev.matbrackets.com/mobile/mobileLogin.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -347,6 +348,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         private final String mEmail;
         private final String mPassword;
         private Context loginContext;
+        Boolean status = false;
+        String resultMessage = "";
 
         UserLoginTask(String email, String password, Context loginContext) {
             this.loginContext = loginContext;
@@ -366,13 +369,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 query += "&";
                 query += "password="+URLEncoder.encode(mPassword, "UTF-8");
 
-                URL devURL = new URL(httpsURL);
+                URL devURL = new URL(mobileLoginURL);
                 HttpsURLConnection con = (HttpsURLConnection)devURL.openConnection();
                 con.setRequestMethod("POST");
                 con.setRequestProperty("Content-length", String.valueOf(query.length()));
                 con.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
                 con.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0;Windows98;DigExt)");
-                con.setConnectTimeout(10000);
+                con.setConnectTimeout(8000);
                 con.setDoOutput(true);
                 con.setDoInput(true);
 
@@ -399,24 +402,19 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         resultFirstName = resultJSON.getString("first_name");
                         resultLastName = resultJSON.getString("last_name");
                         resultUserID = resultJSON.getInt("id");
+                        status = true;
+                    }else{
+                        resultMessage = resultJSON.getString("message");
                     }
                 }catch(JSONException e){
                     e.printStackTrace();
-                    return false;
                 }
-
-                //System.out.println("Resp Code:" + con.getResponseCode());
-                //System.out.println("Resp Message:"+con.getResponseMessage());
-
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
-                return false;
             } catch (MalformedURLException e){
                 e.printStackTrace();
-                return false;
             } catch (IOException e){
                 e.printStackTrace();
-                return false;
             }
 
 //            for (String credential : DUMMY_CREDENTIALS) {
@@ -427,17 +425,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 //                }
 //            }
 
-            // TODO: register the new account here.
-            return true;
+            // TODO: register the new account here.\
+            return status;
         }
 
         @Override
-        protected void onPostExecute(final Boolean success) {
+        protected void onPostExecute(final Boolean result) {
             mAuthTask = null;
             showProgress(false);
 
-            if (success) {
-                if(resultStatus){
+            if (result != null) {
+                if(result){
                     SharedPreferences userPrefs = getSharedPreferences("user", 0);
                     SharedPreferences.Editor editor = userPrefs.edit();
                     editor.putString("user_email", resultEmail);
@@ -449,9 +447,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     editor.commit();
                     Intent mainActivityIntent = new Intent(loginContext, MainActivity.class);
                     startActivity(mainActivityIntent);
+                }else{
+                    mPasswordView.setError(resultMessage);
+                    mPasswordView.requestFocus();
                 }
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
+                mPasswordView.setError(getString(R.string.error_occurred));
                 mPasswordView.requestFocus();
             }
         }

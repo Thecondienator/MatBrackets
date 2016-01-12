@@ -30,6 +30,6 @@
         android:id="@+id/textViewEmail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Emaill Address" />
+        android:text="Email Address" />
 
 </LinearLayout>

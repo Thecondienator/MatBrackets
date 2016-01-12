@@ -1,9 +1,30 @@
 package com.example.brice.matbrackets;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.support.v7.app.AppCompatActivity;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+
+import javax.net.ssl.HttpsURLConnection;
+
 /**
  * Created by Brice on 1/8/2016.
  */
-public class User {
+public class User extends AppCompatActivity{
 
     private String email;
     private String password;
@@ -18,14 +39,6 @@ public class User {
         this.mobileToken = token;
     }
 
-    public boolean checkToken(){
-        if(email.equals("thecondienator@gmail.com")){
-            return true;
-        } else{
-            return false;
-        }
-    }
-
     public void setEmail(String email){
         this.email = email;
     }
@@ -37,4 +50,5 @@ public class User {
     public void setMobileToken(String token){
         this.mobileToken = token;
     }
+
 }
