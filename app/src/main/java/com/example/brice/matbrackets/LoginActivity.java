@@ -368,6 +368,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 String query = "email="+URLEncoder.encode(mEmail, "UTF-8");
                 query += "&";
                 query += "password="+URLEncoder.encode(mPassword, "UTF-8");
+                System.out.println("Login query: "+query);
 
                 URL devURL = new URL(mobileLoginURL);
                 HttpsURLConnection con = (HttpsURLConnection)devURL.openConnection();
@@ -393,6 +394,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 while((inputStr = streamReader.readLine()) != null){
                     responseStrBuilder.append(inputStr);
                 }
+                System.out.println("Login response: "+responseStrBuilder.toString());
                 try {
                     resultJSON = new JSONObject(responseStrBuilder.toString());
                     if(resultJSON.getBoolean("status")){

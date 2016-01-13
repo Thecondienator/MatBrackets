@@ -19,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,7 +39,8 @@ import javax.net.ssl.HttpsURLConnection;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         AccountFragment.OnFragmentInteractionListener,
-        HomeFragment.OnFragmentInteractionListener {
+        HomeFragment.OnFragmentInteractionListener,
+        MyTournamentsFragment.OnFragmentInteractionListener{
 
     String email;
     String token;
@@ -87,6 +89,13 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        displayView(R.id.nav_home);
+    }
+
+    @Override
+    public void onStart(){
+        super.onStart();
     }
 
     @Override
@@ -103,10 +112,10 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
-        //TextView nameText = (TextView)findViewById(R.id.textViewName);
-        //nameText.setText(firstName + " " + lastName);
-        //TextView emailText = (TextView)findViewById(R.id.textViewEmail);
-        //emailText.setText(email);
+        TextView nameText = (TextView)findViewById(R.id.textViewName);
+        nameText.setText(firstName + " " + lastName);
+        TextView emailText = (TextView)findViewById(R.id.textViewEmail);
+        emailText.setText(email);
         return true;
     }
 
@@ -133,39 +142,14 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_home) {
             displayView(item.getItemId());
-            //return true;
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_my_tournaments) {
             displayView(item.getItemId());
-            //return true;
-        } else if (id == R.id.nav_slideshow) {
-            displayView(item.getItemId());
-            //return true;
-        } else if (id == R.id.nav_manage) {
-            displayView(item.getItemId());
-            //return true;
         } else if (id == R.id.nav_account) {
-//            Fragment fragment = new Fragment();
-//            Bundle args = new Bundle();
-            //args.putInt(Fragment.ARG_PLANET_NUMBER, position);
-            //fragment.setArguments(args);
-
-            // Insert the fragment by replacing any existing fragment
-//            FragmentManager fragmentManager = getFragmentManager();
-//            fragmentManager.beginTransaction()
-//                    .replace(R.id.content_frame, fragment)
-//                    .commit();
-
-            // Highlight the selected item, update the title, and close the drawer
-            //mDrawerList.setItemChecked(position, true);
             displayView(item.getItemId());
-            //return true;
-            //mDrawerLayout.closeDrawer(mDrawerList);
         } else if (id == R.id.nav_logout) {
             logout();
         }
 
-        //DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        //drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
@@ -177,7 +161,11 @@ public class MainActivity extends AppCompatActivity
         switch (viewId) {
             case R.id.nav_home:
                 fragment = new HomeFragment();
-                title  = "Home";
+                title  = "MatBrackets";
+                break;
+            case R.id.nav_my_tournaments:
+                fragment = new MyTournamentsFragment();
+                title = "My Tournaments";
                 break;
             case R.id.nav_account:
                 fragment = new AccountFragment();
@@ -251,6 +239,7 @@ public class MainActivity extends AppCompatActivity
                 }else if(mAuthType == "token"){
                     query += "token="+URLEncoder.encode(mAuthValue, "UTF-8");
                 }
+                System.out.println("Check query: "+query);
 
                 URL devURL = new URL(mobileLoginURL);
                 HttpsURLConnection con = (HttpsURLConnection)devURL.openConnection();
@@ -276,6 +265,7 @@ public class MainActivity extends AppCompatActivity
                 while((inputStr = streamReader.readLine()) != null){
                     responseStrBuilder.append(inputStr);
                 }
+                System.out.println("Check response: "+responseStrBuilder.toString());
                 try {
                     resultJSON = new JSONObject(responseStrBuilder.toString());
                     if(resultJSON.getBoolean("status")){
