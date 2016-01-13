@@ -10,6 +10,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -89,6 +90,19 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        //View header = LayoutInflater.from(this).inflate(R.layout.nav_header_main, null);
+        //navigationView.addHeaderView(header);
+        View header = navigationView.getHeaderView(0);
+        TextView textName = (TextView) header.findViewById(R.id.textViewName);
+        textName.setText(firstName + " " + lastName);
+        TextView textEmail = (TextView) header.findViewById(R.id.textViewEmail);
+        textEmail.setText(email);
+
+//        TextView nameText = (TextView)findViewById(R.id.textViewName);
+//        nameText.setText(firstName + " " + lastName);
+//        TextView emailText = (TextView)findViewById(R.id.textViewEmail);
+//        emailText.setText(email);
 
         displayView(R.id.nav_home);
     }
@@ -284,11 +298,6 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected void onPostExecute(final Boolean result) {
             mAuthTask = null;
-
-            TextView nameText = (TextView)findViewById(R.id.textViewName);
-            nameText.setText(firstName + " " + lastName);
-            TextView emailText = (TextView)findViewById(R.id.textViewEmail);
-            emailText.setText(email);
 
             if (result != null) {
                 if(!result){

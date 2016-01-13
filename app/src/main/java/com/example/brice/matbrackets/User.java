@@ -24,7 +24,7 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * Created by Brice on 1/8/2016.
  */
-public class User extends AppCompatActivity{
+public class User{
 
     private String email;
     private String password;
