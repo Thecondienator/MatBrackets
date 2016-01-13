@@ -3,9 +3,6 @@ package com.example.brice.matbrackets;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -32,52 +29,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.Socket;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.net.UnknownHostException;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.net.SocketFactory;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
+public class RegisterActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
 
     /**
      * Id to identity READ_CONTACTS permission request.
@@ -101,13 +61,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-    private String mobileLoginURL = "https://dev.matbrackets.com/mobile/mobileLogin.php";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
-
+        setContentView(R.layout.activity_register);
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -227,7 +185,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password, this);
+            mAuthTask = new UserLoginTask(email, password);
             mAuthTask.execute((Void) null);
         }
     }
@@ -315,7 +273,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
         //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
         ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(LoginActivity.this,
+                new ArrayAdapter<>(RegisterActivity.this,
                         android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
 
         mEmailView.setAdapter(adapter);
@@ -338,21 +296,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
-        private boolean resultStatus;
-        private String resultEmail;
-        private String resultToken;
-        private String resultFirstName;
-        private String resultLastName;
-        private int resultUserID;
-        private JSONObject resultJSON;
         private final String mEmail;
         private final String mPassword;
-        private Context loginContext;
-        Boolean status = false;
-        String resultMessage = "";
 
-        UserLoginTask(String email, String password, Context loginContext) {
-            this.loginContext = loginContext;
+        UserLoginTask(String email, String password) {
             mEmail = email;
             mPassword = password;
         }
@@ -363,98 +310,32 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             try {
                 // Simulate network access.
-                //Thread.sleep(2000);
-
-                String query = "email="+URLEncoder.encode(mEmail, "UTF-8");
-                query += "&";
-                query += "password="+URLEncoder.encode(mPassword, "UTF-8");
-                System.out.println("Login query: "+query);
-
-                URL devURL = new URL(mobileLoginURL);
-                HttpsURLConnection con = (HttpsURLConnection)devURL.openConnection();
-                con.setRequestMethod("POST");
-                con.setRequestProperty("Content-length", String.valueOf(query.length()));
-                con.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
-                con.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0;Windows98;DigExt)");
-                con.setConnectTimeout(8000);
-                con.setDoOutput(true);
-                con.setDoInput(true);
-
-                DataOutputStream output = new DataOutputStream(con.getOutputStream());
-
-                output.writeBytes(query);
-                output.close();
-
-                DataInputStream input = new DataInputStream(con.getInputStream());
-
-                BufferedReader streamReader = new BufferedReader(new InputStreamReader(input, "UTF-8"));
-                StringBuilder responseStrBuilder = new StringBuilder();
-
-                String inputStr = null;
-                while((inputStr = streamReader.readLine()) != null){
-                    responseStrBuilder.append(inputStr);
-                }
-                System.out.println("Login response: "+responseStrBuilder.toString());
-                try {
-                    resultJSON = new JSONObject(responseStrBuilder.toString());
-                    if(resultJSON.getBoolean("status")){
-                        resultStatus = resultJSON.getBoolean("status");
-                        resultEmail = resultJSON.getString("email");
-                        resultToken = resultJSON.getString("mobile_token");
-                        resultFirstName = resultJSON.getString("first_name");
-                        resultLastName = resultJSON.getString("last_name");
-                        resultUserID = resultJSON.getInt("id");
-                        status = true;
-                    }else{
-                        resultMessage = resultJSON.getString("message");
-                    }
-                }catch(JSONException e){
-                    e.printStackTrace();
-                }
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            } catch (MalformedURLException e){
-                e.printStackTrace();
-            } catch (IOException e){
-                e.printStackTrace();
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                return false;
             }
 
-//            for (String credential : DUMMY_CREDENTIALS) {
-//                String[] pieces = credential.split(":");
-//                if (pieces[0].equals(mEmail)) {
-//                    // Account exists, return true if the password matches.
-//                    return pieces[1].equals(mPassword);
-//                }
-//            }
+            for (String credential : DUMMY_CREDENTIALS) {
+                String[] pieces = credential.split(":");
+                if (pieces[0].equals(mEmail)) {
+                    // Account exists, return true if the password matches.
+                    return pieces[1].equals(mPassword);
+                }
+            }
 
-            // TODO: register the new account here.\
-            return status;
+            // TODO: register the new account here.
+            return true;
         }
 
         @Override
-        protected void onPostExecute(final Boolean result) {
+        protected void onPostExecute(final Boolean success) {
             mAuthTask = null;
             showProgress(false);
 
-            if (result != null) {
-                if(result){
-                    SharedPreferences userPrefs = getSharedPreferences("user", 0);
-                    SharedPreferences.Editor editor = userPrefs.edit();
-                    editor.putString("user_email", resultEmail);
-                    editor.putString("user_token", resultToken);
-                    editor.putInt("user_id", resultUserID);
-                    System.out.println("First: "+resultFirstName+", Last: "+resultLastName);
-                    editor.putString("user_first_name", resultFirstName);
-                    editor.putString("user_last_name", resultLastName);
-                    editor.commit();
-                    Intent mainActivityIntent = new Intent(loginContext, MainActivity.class);
-                    startActivity(mainActivityIntent);
-                }else{
-                    mPasswordView.setError(resultMessage);
-                    mPasswordView.requestFocus();
-                }
+            if (success) {
+                finish();
             } else {
-                mPasswordView.setError(getString(R.string.error_occurred));
+                mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
             }
         }

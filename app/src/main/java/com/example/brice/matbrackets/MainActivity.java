@@ -112,10 +112,6 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
-        TextView nameText = (TextView)findViewById(R.id.textViewName);
-        nameText.setText(firstName + " " + lastName);
-        TextView emailText = (TextView)findViewById(R.id.textViewEmail);
-        emailText.setText(email);
         return true;
     }
 
@@ -288,6 +284,11 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected void onPostExecute(final Boolean result) {
             mAuthTask = null;
+
+            TextView nameText = (TextView)findViewById(R.id.textViewName);
+            nameText.setText(firstName + " " + lastName);
+            TextView emailText = (TextView)findViewById(R.id.textViewEmail);
+            emailText.setText(email);
 
             if (result != null) {
                 if(!result){
