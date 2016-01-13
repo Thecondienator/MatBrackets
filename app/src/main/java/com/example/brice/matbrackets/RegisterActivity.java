@@ -4,6 +4,8 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -63,7 +65,7 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
-    private UserLoginTask mAuthTask = null;
+    private UserRegisterTask mAuthTask = null;
 
     // UI references.
     private EditText mEmailView;
@@ -208,7 +210,7 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, firstName, lastName, password, region);
+            mAuthTask = new UserRegisterTask(email, firstName, lastName, password, region, this);
             mAuthTask.execute((Void) null);
         }
     }
@@ -317,7 +319,7 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
+    public class UserRegisterTask extends AsyncTask<Void, Void, Boolean> {
 
         private final String mEmail;
         private final String fName;
@@ -332,11 +334,13 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
         private String resultLastName;
         private int resultUserID;
         private JSONObject resultJSON;
-        private Context loginContext;
+        private Context registerContext;
         Boolean status = false;
         String resultMessage = "";
 
-        UserLoginTask(String email, String firstName, String lastName, String password, int regionID) {
+        UserRegisterTask(String email, String firstName, String lastName, String password,
+                      int regionID, Context context) {
+            this.registerContext = context;
             mEmail = email;
             fName = firstName;
             lName = lastName;
@@ -417,14 +421,29 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
         }
 
         @Override
-        protected void onPostExecute(final Boolean success) {
+        protected void onPostExecute(final Boolean result) {
             mAuthTask = null;
             showProgress(false);
 
-            if (success) {
-                finish();
+            if (result != null) {
+                if(result){
+                    SharedPreferences userPrefs = getSharedPreferences("user", 0);
+                    SharedPreferences.Editor editor = userPrefs.edit();
+                    editor.putString("user_email", resultEmail);
+                    editor.putString("user_token", resultToken);
+                    editor.putInt("user_id", resultUserID);
+                    System.out.println("First: "+resultFirstName+", Last: "+resultLastName);
+                    editor.putString("user_first_name", resultFirstName);
+                    editor.putString("user_last_name", resultLastName);
+                    editor.commit();
+                    Intent mainActivityIntent = new Intent(registerContext, MainActivity.class);
+                    startActivity(mainActivityIntent);
+                }else{
+                    mPasswordView.setError(resultMessage);
+                    mPasswordView.requestFocus();
+                }
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
+                mPasswordView.setError(getString(R.string.error_occurred));
                 mPasswordView.requestFocus();
             }
         }
