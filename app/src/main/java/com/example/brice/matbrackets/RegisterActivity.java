@@ -91,10 +91,10 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
         mPasswordConfirmView = (EditText) findViewById(R.id.password_confirm);
         locationSpinnerView = (Spinner) findViewById(R.id.location_spinner);
 
-        mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        mPasswordConfirmView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if (id == R.id.login || id == EditorInfo.IME_NULL) {
+                if (id == R.id.register || id == EditorInfo.IME_NULL) {
                     attemptRegister();
                     return true;
                 }

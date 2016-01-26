@@ -20,6 +20,13 @@
         android:layout_marginBottom="8dp"
         android:visibility="gone" />
 
+    <ImageView
+        android:layout_width="123dp"
+        android:layout_height="123dp"
+        android:id="@+id/login_image_view"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/logo" />
+
     <ScrollView
         android:id="@+id/login_form"
         android:layout_width="match_parent"
@@ -43,7 +50,8 @@
                     android:hint="@string/prompt_email"
                     android:inputType="textEmailAddress"
                     android:maxLines="1"
-                    android:singleLine="true" />
+                    android:singleLine="true"
+                    android:imeOptions="actionNext" />
 
             </android.support.design.widget.TextInputLayout>
 

@@ -452,6 +452,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     editor.commit();
                     Intent mainActivityIntent = new Intent(loginContext, MainActivity.class);
                     startActivity(mainActivityIntent);
+                    finish();
                 }else{
                     mPasswordView.setError(resultMessage);
                     mPasswordView.requestFocus();
