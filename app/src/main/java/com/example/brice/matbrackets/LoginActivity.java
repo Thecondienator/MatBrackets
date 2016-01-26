@@ -237,12 +237,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
-        return email.contains("@");
+        boolean valid = false;
+        if(email.contains("@") && email.contains(".")){
+            valid = true;
+        }
+        return valid;
     }
 
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
-        return password.length() > 4;
+        return password.length() > 7;
     }
 
     /**
@@ -446,7 +450,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     editor.putString("user_email", resultEmail);
                     editor.putString("user_token", resultToken);
                     editor.putInt("user_id", resultUserID);
-                    System.out.println("First: "+resultFirstName+", Last: "+resultLastName);
+                    //System.out.println("First: "+resultFirstName+", Last: "+resultLastName);
                     editor.putString("user_first_name", resultFirstName);
                     editor.putString("user_last_name", resultLastName);
                     editor.commit();

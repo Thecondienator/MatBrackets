@@ -10,7 +10,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -49,12 +48,15 @@ public class MainActivity extends AppCompatActivity
     String lastName;
     private UserAuthTask mAuthTask = null;
 
-    private String mobileLoginURL = "https://dev.matbrackets.com/mobile/mobileLogin.php";
+    //private String mobileLoginURL = "https://dev.matbrackets.com/mobile/mobileLogin.php";
+    private String mobileLoginURL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mobileLoginURL = getString(R.string.target_URL)+"mobileLogin.php";
 
         SharedPreferences userPrefs = getSharedPreferences("user", 0);
         email = userPrefs.getString("user_email", "");
