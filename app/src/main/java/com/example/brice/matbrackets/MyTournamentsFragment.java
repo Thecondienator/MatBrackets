@@ -7,9 +7,13 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,7 +29,9 @@ import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -50,7 +56,7 @@ public class MyTournamentsFragment extends Fragment {
     private int prefID;
     private String prefToken;
     private GetTask mGetTask = null;
-    private Tournament[] tournamentsArray;
+    private ArrayList<Tournament> tournamentsArray;
 
     //private String getMyTournamentsURL = "https://dev.matbrackets.com/mobile/myTournaments.php";
     private String getMyTournamentsURL;
@@ -96,6 +102,7 @@ public class MyTournamentsFragment extends Fragment {
         SharedPreferences userPrefs = this.getActivity().getSharedPreferences("user", 0);
         prefID = userPrefs.getInt("user_id", 0);
         prefToken = userPrefs.getString("user_token", "");
+        tournamentsArray = new ArrayList<Tournament>();
 
         populateTournaments(prefID, prefToken);
         //expListView = (ExpandableListView) getView().findViewById(R.id.expandableListView);
@@ -159,23 +166,37 @@ public class MyTournamentsFragment extends Fragment {
         mGetTask.execute((Void) null);
     }
 
-    private void BuildTable() {
+    private void buildPage() {
 
 //        sqlcon.open();
 //        Cursor c = sqlcon.readEntry();
-//
-//        int rows = c.getCount();
-//        int cols = c.getColumnCount();
-//        String[] array;
-//        c.moveToFirst();
-//
-//        // outer for loop
-//        for (int i = 0; i < rows; i++) {
-//
-//            TableRow row = new TableRow(this);
-//            row.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
-//                    LayoutParams.WRAP_CONTENT));
-//
+
+        //int rows = tournamentsArray.size();
+        //int cols = c.getColumnCount();
+        String[] array;
+        //c.moveToFirst();
+
+        // outer for loop
+        for (int i = 0; i < tournamentsArray.size(); i++) {
+
+            //TableRow row = new TableRow(this.getContext());
+            //row.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+            //        LinearLayout.LayoutParams.WRAP_CONTENT));
+
+            LinearLayout mainLayout = (LinearLayout) this.getActivity().findViewById(R.id.linearLayout);
+            TextView tv = new TextView(this.getContext());
+            tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+            //    tv.setBackgroundResource(R.drawable.cell_shape);
+            tv.setGravity(Gravity.CENTER);
+            tv.setTextSize(18);
+            tv.setPadding(0, 5, 0, 5);
+            System.out.println("Name: "+tournamentsArray.get(i).getName());
+            tv.setText(tournamentsArray.get(i).getName());
+            //array = c.getString(1).split(",");
+//            for (int k = 0; k < array.length; k++) {
+//                tv.setText(array[k]);
+//            }
 //            // inner for loop
 //            for (int j = 0; j < cols; j++) {
 //
@@ -194,13 +215,13 @@ public class MyTournamentsFragment extends Fragment {
 //                }
 //
 //            }
-//
-//            c.moveToNext();
-//
-//            table_layout.addView(row);
-//
-//        }
-//        sqlcon.close();
+
+            //c.moveToNext();
+
+            mainLayout.addView(tv);
+
+        }
+        //sqlcon.close();
     }
 
     /**
@@ -258,11 +279,30 @@ public class MyTournamentsFragment extends Fragment {
                 try {
                     resultJSON = new JSONObject(responseStrBuilder.toString());
                     if(resultJSON.getBoolean("status")){
-                        JSONArray arrJSON = new JSONArray(resultJSON);
-//                        for(int i = 0; i < arrJSON.length(); i++){
-//
+//                        HashMap<String, String> tourney = new HashMap<String, String>();
+//                        for(int i = 0; i < resultJSON.length(); i++){
+//                            Tournament tourney = new Tournament();
+//                            tourney.setName(resultJSON)
 //                        }
-                        HashMap<String, String> tourney = new HashMap<String, String>();
+                        Iterator<?> keys = resultJSON.keys();
+                        JSONObject tempJObject;
+                        while(keys.hasNext()){
+                            String key = (String)keys.next();
+                            Tournament tourney = new Tournament();
+                            if(resultJSON.get(key) instanceof JSONObject){
+                                //System.out.println(resultJSON.get(key).toString());
+                                tempJObject = (JSONObject)resultJSON.get(key);
+                                tourney.setName(tempJObject.get("tournament_name").toString());
+                                tourney.setSize((int) tempJObject.get("size"));
+                                tourney.setLocation_city(tempJObject.get("location_city").toString());
+                                tourney.setYear((int) tempJObject.get("year"));
+                                tourney.setRegion(tempJObject.get("region_name").toString());
+                                tourney.setAbbreviation(tempJObject.get("abbreviation").toString());
+                                //System.out.println(tourney.toString());
+                                tournamentsArray.add(tourney);
+                            }
+                        }
+                        //System.out.println(tournamentsArray.toString());
                         return true;
                     }
                 }catch(JSONException e){
@@ -285,6 +325,8 @@ public class MyTournamentsFragment extends Fragment {
 
             if (result != null) {
                 if(result){
+                    System.out.println("Building page...");
+                    buildPage();
 //                    SharedPreferences userPrefs = getSharedPreferences("user", 0);
 //                    SharedPreferences.Editor editor = userPrefs.edit();
 //                    editor.putString("user_email", resultEmail);

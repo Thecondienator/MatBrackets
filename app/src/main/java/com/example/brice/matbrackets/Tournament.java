@@ -8,6 +8,8 @@ public class Tournament {
     private String name;
     private int size;
     private String location_city;
+    private String region;
+    private String abbreviation;
     private int year;
     private float cost;
 
@@ -39,6 +41,14 @@ public class Tournament {
         return size;
     }
 
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
     public void setSize(int size) {
         this.size = size;
     }
@@ -65,5 +75,27 @@ public class Tournament {
 
     public void setCost(float cost) {
         this.cost = cost;
+    }
+
+    public String getAbbreviation() {
+        return abbreviation;
+    }
+
+    public void setAbbreviation(String abbreviation) {
+        this.abbreviation = abbreviation;
+    }
+
+    @Override
+    public String toString() {
+        return "Tournament{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", size=" + size +
+                ", location_city='" + location_city + '\'' +
+                ", region='" + region + '\'' +
+                ", abbreviation='" + abbreviation + '\'' +
+                ", year=" + year +
+                ", cost=" + cost +
+                '}';
     }
 }
