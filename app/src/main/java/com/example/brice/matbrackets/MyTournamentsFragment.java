@@ -173,9 +173,13 @@ public class MyTournamentsFragment extends Fragment {
 
         //int rows = tournamentsArray.size();
         //int cols = c.getColumnCount();
-        String[] array;
+        //String[] array;
         //c.moveToFirst();
 
+        if(tournamentsArray.size() > 0){
+            TextView defTV = (TextView) this.getActivity().findViewById(R.id.no_tournaments_textview);
+            defTV.setVisibility(View.GONE);
+        }
         // outer for loop
         for (int i = 0; i < tournamentsArray.size(); i++) {
 
