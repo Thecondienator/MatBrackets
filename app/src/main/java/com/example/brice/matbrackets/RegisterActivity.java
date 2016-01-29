@@ -78,7 +78,7 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        mobileRegisterURL = getString(R.string.target_URL)+"mobileRegister.php";
+        mobileRegisterURL = getString(R.string.target_URL)+"/mobile/mobileRegister.php";
 
         // Set up the login form.
         mEmailView = (EditText) findViewById(R.id.email);

@@ -12,6 +12,15 @@ public class Tournament {
     private String abbreviation;
     private int year;
     private float cost;
+    private String image_name;
+
+    public String getImage_name() {
+        return image_name;
+    }
+
+    public void setImage_name(String image_name) {
+        this.image_name = image_name;
+    }
 
     public Tournament(){
 

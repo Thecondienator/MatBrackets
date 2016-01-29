@@ -6,18 +6,32 @@
         android:orientation="vertical"
         android:layout_gravity="center_horizontal|top">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:id="@+id/linearLayout">
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
 
-        <TextView
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/no_tournaments_textview"
-            android:text="@string/no_viewable_tournaments" />
-    </LinearLayout>
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:id="@+id/linearLayout">
 
+            <!--<TextView-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:id="@+id/no_tournaments_textview"-->
+                <!--android:text="@string/no_viewable_tournaments" />-->
+        </LinearLayout>
+
+        <!--<android.support.v7.widget.CardView-->
+            <!--xmlns:card_view="http://schemas.android.com/apk/res-auto"-->
+            <!--android:id="@+id/my_tournaments_card_view"-->
+            <!--android:layout_gravity="top"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="200px"-->
+            <!--card_view:cardCornerRadius="4dp">-->
+
+        <!--</android.support.v7.widget.CardView>-->
+    </ScrollView>
 </LinearLayout>

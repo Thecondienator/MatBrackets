@@ -1,33 +1,38 @@
 package com.example.brice.matbrackets;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TableRow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,6 +65,8 @@ public class MyTournamentsFragment extends Fragment {
 
     //private String getMyTournamentsURL = "https://dev.matbrackets.com/mobile/myTournaments.php";
     private String getMyTournamentsURL;
+    private String imagesURL;
+    private HashMap<String, Bitmap> imagesHash;
 
     private OnFragmentInteractionListener mListener;
 
@@ -92,7 +99,8 @@ public class MyTournamentsFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
-        getMyTournamentsURL = getString(R.string.target_URL)+"getMyTournaments.php";
+        getMyTournamentsURL = getString(R.string.target_URL)+"/mobile/getMyTournaments.php";
+        imagesURL = getString(R.string.target_URL)+"/images/";
     }
 
     @Override
@@ -103,6 +111,7 @@ public class MyTournamentsFragment extends Fragment {
         prefID = userPrefs.getInt("user_id", 0);
         prefToken = userPrefs.getString("user_token", "");
         tournamentsArray = new ArrayList<Tournament>();
+        imagesHash = new HashMap<String, Bitmap>();
 
         populateTournaments(prefID, prefToken);
         //expListView = (ExpandableListView) getView().findViewById(R.id.expandableListView);
@@ -167,27 +176,16 @@ public class MyTournamentsFragment extends Fragment {
     }
 
     private void buildPage() {
+        LinearLayout mainLayout = (LinearLayout) this.getActivity().findViewById(R.id.linearLayout);
+        mainLayout.removeAllViews();
 
-//        sqlcon.open();
-//        Cursor c = sqlcon.readEntry();
+        if(tournamentsArray.size() == 0 || tournamentsArray.isEmpty()){
+            CardView cardView = new CardView(this.getContext());
+            cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT));
+            cardView.setMinimumHeight(200);
+            cardView.setUseCompatPadding(true);
 
-        //int rows = tournamentsArray.size();
-        //int cols = c.getColumnCount();
-        //String[] array;
-        //c.moveToFirst();
-
-        if(tournamentsArray.size() > 0){
-            TextView defTV = (TextView) this.getActivity().findViewById(R.id.no_tournaments_textview);
-            defTV.setVisibility(View.GONE);
-        }
-        // outer for loop
-        for (int i = 0; i < tournamentsArray.size(); i++) {
-
-            //TableRow row = new TableRow(this.getContext());
-            //row.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-            //        LinearLayout.LayoutParams.WRAP_CONTENT));
-
-            LinearLayout mainLayout = (LinearLayout) this.getActivity().findViewById(R.id.linearLayout);
             TextView tv = new TextView(this.getContext());
             tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -195,37 +193,85 @@ public class MyTournamentsFragment extends Fragment {
             tv.setGravity(Gravity.CENTER);
             tv.setTextSize(18);
             tv.setPadding(0, 5, 0, 5);
-            System.out.println("Name: "+tournamentsArray.get(i).getName());
-            tv.setText(tournamentsArray.get(i).getName());
-            //array = c.getString(1).split(",");
-//            for (int k = 0; k < array.length; k++) {
-//                tv.setText(array[k]);
-//            }
-//            // inner for loop
-//            for (int j = 0; j < cols; j++) {
-//
-//                TextView tv = new TextView(this);
-//                tv.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT,
-//                        LayoutParams.WRAP_CONTENT));
-//                //    tv.setBackgroundResource(R.drawable.cell_shape);
-//                tv.setGravity(Gravity.CENTER);
-//                tv.setTextSize(18);
-//                tv.setPadding(0, 5, 0, 5);
-//                array = c.getString(1).split(",");
-//                for (int k = 0; k < array.length; k++) {
-//                    tv.setText(array[k]);
-//                    row.addView(tv);
-//
-//                }
-//
-//            }
-
-            //c.moveToNext();
-
-            mainLayout.addView(tv);
-
+            tv.setText("You don't have any tournaments yet!");
+            cardView.addView(tv);
+            mainLayout.addView(cardView);
         }
-        //sqlcon.close();
+        // outer for loop
+        for (int i = 0; i < tournamentsArray.size(); i++) {
+            CardView cardView = makeCard(i);
+
+            mainLayout.addView(cardView);
+            //mainLayout.addView(tv);
+        }
+    }
+
+    private CardView makeCard(int i){
+        String temp;
+        CardView cardView = new CardView(this.getContext());
+        cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        cardView.setMinimumHeight(200);
+        cardView.setUseCompatPadding(true);
+        cardView.setCardElevation(10);
+        cardView.setRadius(10);
+
+        RelativeLayout newRL = new RelativeLayout(this.getContext());
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams params2 = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        newRL.setGravity(Gravity.LEFT);
+        //newRL.setOrientation(LinearLayout.VERTICAL);
+
+        ImageView img = new ImageView(this.getContext());
+        if(tournamentsArray.get(i).getImage_name().equals("")) {
+            img.setImageResource(R.drawable.logo);
+        }else{
+            try {
+                img.setImageBitmap(imagesHash.get(tournamentsArray.get(i).getImage_name()));
+            }catch(Exception e){
+                img.setImageResource(R.drawable.logo);
+                e.printStackTrace();
+            }
+        }
+        RelativeLayout.LayoutParams imgParams = new RelativeLayout.LayoutParams(250, 250);
+        img.setLayoutParams(imgParams);
+        img.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        img.setId(R.id.imgViewID);
+        newRL.addView(img);
+
+        params.addRule(RelativeLayout.RIGHT_OF, img.getId());
+
+        temp = " "+String.valueOf(tournamentsArray.get(i).getYear())+" "+tournamentsArray.get(i).getName();
+        TextView tv = makeTextView(temp);
+        tv.setId(R.id.nameViewID);
+        newRL.addView(tv, params);
+
+        params2.addRule(RelativeLayout.RIGHT_OF, img.getId());
+        params2.addRule(RelativeLayout.BELOW, tv.getId());
+
+        temp = "      "+tournamentsArray.get(i).getLocation_city() + ", " + tournamentsArray.get(i).getAbbreviation();
+        TextView locationView = makeTextView(temp);
+        newRL.addView(locationView, params2);
+
+//        temp = "     " + String.valueOf(tournamentsArray.get(i).getYear());
+//        TextView yearView = makeTextView(temp);
+//        newLL.addView(yearView);
+
+        cardView.addView(newRL);
+        return cardView;
+    }
+
+    private TextView makeTextView(String text){
+        TextView tv = new TextView(this.getContext());
+        tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+        //    tv.setBackgroundResource(R.drawable.cell_shape);
+        tv.setGravity(Gravity.LEFT);
+        tv.setTextSize(18);
+        tv.setPadding(15, 15, 15, 5);
+        tv.setText(text);
+        return tv;
     }
 
     /**
@@ -238,6 +284,7 @@ public class MyTournamentsFragment extends Fragment {
         private final int mID;
         private final String mToken;
         private Context getContext;
+        private Bitmap photobit = null;
 
         GetTask(int id, String token, Context getContext) {
             this.getContext = getContext;
@@ -302,6 +349,26 @@ public class MyTournamentsFragment extends Fragment {
                                 tourney.setYear((int) tempJObject.get("year"));
                                 tourney.setRegion(tempJObject.get("region_name").toString());
                                 tourney.setAbbreviation(tempJObject.get("abbreviation").toString());
+                                tourney.setImage_name(tempJObject.get("image_name").toString());
+                                if(!tourney.getImage_name().equals("")) {
+                                    try {
+                                        URL imgURL = new URL(imagesURL + tourney.getImage_name());
+                                        URLConnection imageConn = imgURL.openConnection();
+                                        imageConn.connect();
+                                        InputStream is = imageConn.getInputStream();
+                                        BufferedInputStream bis = new BufferedInputStream(is);
+                                        photobit = BitmapFactory.decodeStream(bis);
+                                        bis.close();
+                                        is.close();
+
+                                        //Drawable thumb = Drawable.createFromStream(imgURL.openStream(), tourney.getImage_name());
+                                        imagesHash.put(tourney.getImage_name(), photobit);
+                                    } catch (Exception e) {
+                                        System.out.println("you failed: " + imagesURL + tourney.getImage_name());
+                                        System.out.println("Hashmap check: "+imagesHash.toString());
+                                        e.printStackTrace();
+                                    }
+                                }
                                 //System.out.println(tourney.toString());
                                 tournamentsArray.add(tourney);
                             }
@@ -326,11 +393,13 @@ public class MyTournamentsFragment extends Fragment {
         @Override
         protected void onPostExecute(final Boolean result) {
             mGetTask = null;
+            System.out.println("Building page...");
+            buildPage();
 
             if (result != null) {
                 if(result){
-                    System.out.println("Building page...");
-                    buildPage();
+//                    System.out.println("Building page...");
+//                    buildPage();
 //                    SharedPreferences userPrefs = getSharedPreferences("user", 0);
 //                    SharedPreferences.Editor editor = userPrefs.edit();
 //                    editor.putString("user_email", resultEmail);
