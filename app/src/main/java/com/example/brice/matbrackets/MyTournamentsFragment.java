@@ -180,21 +180,22 @@ public class MyTournamentsFragment extends Fragment {
         mainLayout.removeAllViews();
 
         if(tournamentsArray.size() == 0 || tournamentsArray.isEmpty()){
-            CardView cardView = new CardView(this.getContext());
-            cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT));
-            cardView.setMinimumHeight(200);
-            cardView.setUseCompatPadding(true);
-
-            TextView tv = new TextView(this.getContext());
-            tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT));
-            //    tv.setBackgroundResource(R.drawable.cell_shape);
-            tv.setGravity(Gravity.CENTER);
-            tv.setTextSize(18);
-            tv.setPadding(0, 5, 0, 5);
-            tv.setText("You don't have any tournaments yet!");
-            cardView.addView(tv);
+//            CardView cardView = new CardView(this.getContext());
+//            cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+//                    ViewGroup.LayoutParams.MATCH_PARENT));
+//            cardView.setMinimumHeight(200);
+//            cardView.setUseCompatPadding(true);
+//
+//            TextView tv = new TextView(this.getContext());
+//            tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+//                    LinearLayout.LayoutParams.WRAP_CONTENT));
+//            //    tv.setBackgroundResource(R.drawable.cell_shape);
+//            tv.setGravity(Gravity.CENTER);
+//            tv.setTextSize(18);
+//            tv.setPadding(0, 5, 0, 5);
+//            tv.setText("You don't have any tournaments yet!");
+//            cardView.addView(tv);
+            CardView cardView = makeDefaultCard();
             mainLayout.addView(cardView);
         }
         // outer for loop
@@ -204,6 +205,26 @@ public class MyTournamentsFragment extends Fragment {
             mainLayout.addView(cardView);
             //mainLayout.addView(tv);
         }
+    }
+
+    private CardView makeDefaultCard(){
+        CardView cardView = new CardView(this.getContext());
+        cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        cardView.setMinimumHeight(200);
+        cardView.setUseCompatPadding(true);
+
+        TextView tv = makeTextView("You don't have any tournaments yet!");
+//        TextView tv = new TextView(this.getContext());
+//        tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+//                LinearLayout.LayoutParams.WRAP_CONTENT));
+//        //    tv.setBackgroundResource(R.drawable.cell_shape);
+//        tv.setGravity(Gravity.CENTER);
+//        tv.setTextSize(18);
+//        tv.setPadding(0, 5, 0, 5);
+//        tv.setText("You don't have any tournaments yet!");
+        cardView.addView(tv);
+        return cardView;
     }
 
     private CardView makeCard(int i){
@@ -283,11 +304,11 @@ public class MyTournamentsFragment extends Fragment {
         private JSONObject resultJSON;
         private final int mID;
         private final String mToken;
-        private Context getContext;
+        private Context getTaskContext;
         private Bitmap photobit = null;
 
         GetTask(int id, String token, Context getContext) {
-            this.getContext = getContext;
+            this.getTaskContext = getContext;
             mID = id;
             mToken = token;
         }
@@ -339,38 +360,40 @@ public class MyTournamentsFragment extends Fragment {
                         JSONObject tempJObject;
                         while(keys.hasNext()){
                             String key = (String)keys.next();
-                            Tournament tourney = new Tournament();
-                            if(resultJSON.get(key) instanceof JSONObject){
-                                //System.out.println(resultJSON.get(key).toString());
-                                tempJObject = (JSONObject)resultJSON.get(key);
-                                tourney.setName(tempJObject.get("tournament_name").toString());
-                                tourney.setSize((int) tempJObject.get("size"));
-                                tourney.setLocation_city(tempJObject.get("location_city").toString());
-                                tourney.setYear((int) tempJObject.get("year"));
-                                tourney.setRegion(tempJObject.get("region_name").toString());
-                                tourney.setAbbreviation(tempJObject.get("abbreviation").toString());
-                                tourney.setImage_name(tempJObject.get("image_name").toString());
-                                if(!tourney.getImage_name().equals("")) {
-                                    try {
-                                        URL imgURL = new URL(imagesURL + tourney.getImage_name());
-                                        URLConnection imageConn = imgURL.openConnection();
-                                        imageConn.connect();
-                                        InputStream is = imageConn.getInputStream();
-                                        BufferedInputStream bis = new BufferedInputStream(is);
-                                        photobit = BitmapFactory.decodeStream(bis);
-                                        bis.close();
-                                        is.close();
+                            if(!key.equals("status")){
+                                Tournament tourney = new Tournament();
+                                if(resultJSON.get(key) instanceof JSONObject) {
+                                    //System.out.println(resultJSON.get(key).toString());
+                                    tempJObject = (JSONObject) resultJSON.get(key);
+                                    tourney.setName(tempJObject.get("tournament_name").toString());
+                                    tourney.setSize((int) tempJObject.get("size"));
+                                    tourney.setLocation_city(tempJObject.get("location_city").toString());
+                                    tourney.setYear((int) tempJObject.get("year"));
+                                    tourney.setRegion(tempJObject.get("region_name").toString());
+                                    tourney.setAbbreviation(tempJObject.get("abbreviation").toString());
+                                    tourney.setImage_name(tempJObject.get("image_name").toString());
+                                    if (!tourney.getImage_name().equals("")) {
+                                        try {
+                                            URL imgURL = new URL(imagesURL + tourney.getImage_name());
+                                            URLConnection imageConn = imgURL.openConnection();
+                                            imageConn.connect();
+                                            InputStream is = imageConn.getInputStream();
+                                            BufferedInputStream bis = new BufferedInputStream(is);
+                                            photobit = BitmapFactory.decodeStream(bis);
+                                            bis.close();
+                                            is.close();
 
-                                        //Drawable thumb = Drawable.createFromStream(imgURL.openStream(), tourney.getImage_name());
-                                        imagesHash.put(tourney.getImage_name(), photobit);
-                                    } catch (Exception e) {
-                                        System.out.println("you failed: " + imagesURL + tourney.getImage_name());
-                                        System.out.println("Hashmap check: "+imagesHash.toString());
-                                        e.printStackTrace();
+                                            //Drawable thumb = Drawable.createFromStream(imgURL.openStream(), tourney.getImage_name());
+                                            imagesHash.put(tourney.getImage_name(), photobit);
+                                        } catch (Exception e) {
+                                            System.out.println("you failed: " + imagesURL + tourney.getImage_name());
+                                            System.out.println("Hashmap check: " + imagesHash.toString());
+                                            e.printStackTrace();
+                                        }
                                     }
+                                    //System.out.println(tourney.toString());
+                                    tournamentsArray.add(tourney);
                                 }
-                                //System.out.println(tourney.toString());
-                                tournamentsArray.add(tourney);
                             }
                         }
                         //System.out.println(tournamentsArray.toString());
@@ -393,7 +416,7 @@ public class MyTournamentsFragment extends Fragment {
         @Override
         protected void onPostExecute(final Boolean result) {
             mGetTask = null;
-            System.out.println("Building page...");
+            //System.out.println("Building page...");
             buildPage();
 
             if (result != null) {

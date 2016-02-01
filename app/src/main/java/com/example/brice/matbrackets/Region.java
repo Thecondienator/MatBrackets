@@ -9,6 +9,10 @@ public class Region {
     private String name;
     private String abbreviation;
 
+    public Region(){
+
+    }
+
     public Region(int id, String name, String abbr){
         this.id = id;
         this.name = name;
@@ -37,5 +41,14 @@ public class Region {
 
     public void setAbbreviation(String abbreviation) {
         this.abbreviation = abbreviation;
+    }
+
+    @Override
+    public String toString() {
+        return "Region{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", abbreviation='" + abbreviation + '\'' +
+                '}';
     }
 }

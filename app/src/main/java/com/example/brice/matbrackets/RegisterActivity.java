@@ -23,6 +23,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -41,6 +42,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -59,6 +63,7 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserRegisterTask mAuthTask = null;
+    private GetRegionsTask mGetRegionsTask = null;
 
     // UI references.
     private EditText mEmailView;
@@ -69,9 +74,13 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
     private Spinner locationSpinnerView;
     private View mProgressView;
     private View mLoginFormView;
+    private ArrayList<Region> regionsArray;
+    private LinkedHashMap<String,String> spinnerMap;
+    LinkedHashMapAdapter<String, String> adapter;
 
     //private String mobileRegisterURL = "https://dev.matbrackets.com/mobile/mobileRegister.php";
     private String mobileRegisterURL;
+    private String getRegionsURL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +88,8 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
         setContentView(R.layout.activity_register);
 
         mobileRegisterURL = getString(R.string.target_URL)+"/mobile/mobileRegister.php";
+        getRegionsURL = getString(R.string.target_URL)+"/manage/getAllRegions.php";
+        regionsArray = new ArrayList<Region>();
 
         // Set up the login form.
         mEmailView = (EditText) findViewById(R.id.email);
@@ -98,6 +109,8 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
                 return false;
             }
         });
+
+        populateRegions();
 
         Button mEmailRegisterButton = (Button) findViewById(R.id.register_button);
         mEmailRegisterButton.setOnClickListener(new OnClickListener() {
@@ -154,6 +167,47 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
 //        }
 //    }
 
+    private void populateRegions(){
+        if (mGetRegionsTask != null) {
+            return;
+        }
+
+        mGetRegionsTask = new GetRegionsTask();
+        mGetRegionsTask.execute((Void) null);
+    }
+
+    private void buildRegions(){
+        //String[] wee = list2.toArray(new String[list2.size()]);
+//        final String[] str={"Report 1","Report 2","Report 3","Report 4","Report 5"};
+//        ArrayAdapter<String> spinnerArrayAdapter = new ArrayAdapter<String>(
+//                this, android.R.layout.simple_spinner_item, str);
+//        spinnerArrayAdapter.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item );
+//
+//        locationSpinnerView.setAdapter(spinnerArrayAdapter);
+
+//        String[] spinnerArray = new String[regionsArray.size()];
+//        spinnerMap = new HashMap<Integer, String>();
+//        for (int i = 0; i < regionsArray.size(); i++)
+//        {
+//            spinnerMap.put(regionsArray.get(i).getId(),regionsArray.get(i).getName());
+//            spinnerArray[i] = regionsArray.get(i).getName();
+//        }
+//
+//        ArrayAdapter<String> adapter =new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, spinnerArray);
+//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        locationSpinnerView.setAdapter(adapter);
+
+        spinnerMap = new LinkedHashMap<String, String>();
+        for (int i = 0; i < regionsArray.size(); i++)
+        {
+            System.out.println("Adding region: "+regionsArray.get(i).toString());
+            spinnerMap.put(String.valueOf(regionsArray.get(i).getId()), regionsArray.get(i).getName()+" ("+regionsArray.get(i).getAbbreviation()+")");
+        }
+        adapter = new LinkedHashMapAdapter<String, String>(this, android.R.layout.simple_spinner_item, spinnerMap);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        locationSpinnerView.setAdapter(adapter);
+        //locationSpinnerView.setOnItemSelectedListener(this);
+    }
 
     /**
      * Attempts to sign in or register the account specified by the login form.
@@ -178,7 +232,7 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
         String lastName = mLastNameView.getText().toString();
         String password = mPasswordView.getText().toString();
         String passConf = mPasswordConfirmView.getText().toString();
-        Integer region = locationSpinnerView.getId();
+        String region = locationSpinnerView.getSelectedItem().toString();
 
         boolean cancel = false;
         View focusView = null;
@@ -214,11 +268,17 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
             mPasswordView.setError(getString(R.string.error_password_match));
             focusView = mPasswordView;
             cancel = true;
-        } else if (!isPasswordValid(password)){
+        } else if (!isPasswordValid(password)) {
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
         }
+//        else if (TextUtils.isEmpty(region)) {
+//            System.out.println("Region value: "+region);
+//            mLastNameView.setError(getString(R.string.error_field_required));
+//            focusView = mLastNameView;
+//            cancel = true;
+//        }
 
         if (cancel) {
             // There was an error; don't attempt login and focus the first
@@ -361,14 +421,14 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
         String resultMessage = "";
 
         UserRegisterTask(String email, String firstName, String lastName, String password,
-                      int regionID, Context context) {
+                         String regionID, Context context) {
             this.registerContext = context;
             mEmail = email;
             fName = firstName;
             lName = lastName;
             mPassword = password;
-            //region = String.valueOf(regionID);
-            region = "1";
+            region = regionID;
+            //region = "1";
         }
 
         @Override
@@ -376,6 +436,12 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
             // TODO: attempt authentication against a network service.
 
             try{
+                System.out.println("Parameters: ");
+                System.out.println("   email: "+mEmail);
+                System.out.println("   first name: "+fName);
+                System.out.println("   last  name: "+lName);
+                System.out.println("   password: "+mPassword);
+                System.out.println("   region: "+region);
                 String query = "email="+ URLEncoder.encode(mEmail, "UTF-8");
                 query += "&";
                 query += "firstName="+URLEncoder.encode(fName, "UTF-8");
@@ -473,6 +539,141 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
         @Override
         protected void onCancelled() {
             mAuthTask = null;
+            showProgress(false);
+        }
+    }
+
+    /**
+     * Represents an asynchronous login/registration task used to authenticate
+     * the user.
+     */
+    public class GetRegionsTask extends AsyncTask<Void, Void, Boolean> {
+
+        private boolean resultStatus;
+        private String resultID;
+        private String resultName;
+        private String resultAbbr;
+        private JSONObject resultJSON;
+        Boolean status = false;
+        String resultMessage = "";
+        private Context regionsContext;
+
+        GetRegionsTask() {
+            //region = String.valueOf(regionID);
+            //region = "1";
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            try{
+//                String query = "email="+ URLEncoder.encode(mEmail, "UTF-8");
+//                query += "&";
+//                query += "firstName="+URLEncoder.encode(fName, "UTF-8");
+//                query += "&";
+//                query += "lastName="+URLEncoder.encode(lName, "UTF-8");
+//                query += "&";
+//                query += "password="+URLEncoder.encode(mPassword, "UTF-8");
+//                query += "&";
+//                query += "region="+URLEncoder.encode(region, "UTF-8");
+
+                System.out.println("Register query: querying...");
+
+                URL devURL = new URL(getRegionsURL);
+                HttpsURLConnection con = (HttpsURLConnection)devURL.openConnection();
+                con.setRequestMethod("POST");
+//                con.setRequestProperty("Content-length", String.valueOf(query.length()));
+                con.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                con.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0;Windows98;DigExt)");
+                con.setConnectTimeout(8000);
+                con.setDoOutput(true);
+                con.setDoInput(true);
+
+                DataOutputStream output = new DataOutputStream(con.getOutputStream());
+
+//                output.writeBytes(query);
+                output.close();
+
+                DataInputStream input = new DataInputStream(con.getInputStream());
+
+                BufferedReader streamReader = new BufferedReader(new InputStreamReader(input, "UTF-8"));
+                StringBuilder responseStrBuilder = new StringBuilder();
+
+                String inputStr = null;
+                while((inputStr = streamReader.readLine()) != null){
+                    responseStrBuilder.append(inputStr);
+                }
+                System.out.println("Regions response: "+responseStrBuilder.toString());
+                try {
+                    resultJSON = new JSONObject(responseStrBuilder.toString());
+                    if(resultJSON.getBoolean("status")){
+                        //
+                        Iterator<?> keys = resultJSON.keys();
+                        JSONObject tempJObject;
+                        while(keys.hasNext()){
+                            String key = (String)keys.next();
+                            if(!key.equals("status")) {
+                                Region region = new Region();
+                                if (resultJSON.get(key) instanceof JSONObject) {
+                                    tempJObject = (JSONObject) resultJSON.get(key);
+                                    region.setId((int) tempJObject.get("id"));
+                                    region.setName(tempJObject.get("name").toString());
+                                    region.setAbbreviation(tempJObject.get("abbreviation").toString());
+                                }
+                                //                            System.out.println("Region: "+region.toString());
+                                regionsArray.add(region);
+                            }
+                        }
+                        status = true;
+                    }else{
+                        //resultMessage = resultJSON.getString("message");
+                    }
+                }catch(JSONException e){
+                    e.printStackTrace();
+                }
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (MalformedURLException e){
+                e.printStackTrace();
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+
+            return status;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean result) {
+            mGetRegionsTask = null;
+            //showProgress(false);
+            buildRegions();
+
+            if (result != null) {
+                if(result){
+//                    SharedPreferences userPrefs = getSharedPreferences("user", 0);
+//                    SharedPreferences.Editor editor = userPrefs.edit();
+//                    editor.putString("user_email", resultEmail);
+//                    editor.putString("user_token", resultToken);
+//                    editor.putInt("user_id", resultUserID);
+//                    System.out.println("First: "+resultFirstName+", Last: "+resultLastName);
+//                    editor.putString("user_first_name", resultFirstName);
+//                    editor.putString("user_last_name", resultLastName);
+//                    editor.commit();
+//                    Intent mainActivityIntent = new Intent(registerContext, MainActivity.class);
+//                    startActivity(mainActivityIntent);
+                }else{
+//                    mPasswordView.setError(resultMessage);
+//                    mPasswordView.requestFocus();
+                }
+            } else {
+//                mPasswordView.setError(getString(R.string.error_occurred));
+//                mPasswordView.requestFocus();
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            mGetRegionsTask = null;
             showProgress(false);
         }
     }
