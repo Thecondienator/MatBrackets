@@ -34,6 +34,7 @@
     <string name="hello_home_fragment">Hello home fragment</string>
     <string name="hello_account_fragment">Hello account fragment</string>
     <string name="hello_my_tournaments_fragment">These are my tournaments</string>
+    <string name="search_hint">Look for tournaments...</string>
 
     <string name="no_viewable_tournaments">You don\'t have any tournaments yet?</string>
 
