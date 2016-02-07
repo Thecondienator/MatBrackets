@@ -96,7 +96,7 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    public void populateRecent(){
+    public void populateLocal(){
 
     }
 
@@ -132,4 +132,157 @@ public class HomeFragment extends Fragment {
         void onFragmentInteraction(Uri uri);
     }
 
+    /**
+     * Represents an asynchronous login/registration task used to authenticate
+     * the user.
+     */
+    public class GetLocalTask extends AsyncTask<Void, Void, Boolean> {
+
+        private JSONObject resultJSON;
+        private final int mID;
+        private final String mToken;
+
+        GetLocalTask(int id, String token) {
+            mID = id;
+            mToken = token;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            // TODO: attempt authentication against a network service.
+
+            try {
+                String query = "user="+mID;
+                query += "&";
+                query += "token="+URLEncoder.encode(mToken, "UTF-8");
+                System.out.println("Tournaments query: "+query);
+
+                //URL devURL = new URL(getLocalTournamentsURL);
+                URL devURL = new URL("blah");
+                HttpsURLConnection con = (HttpsURLConnection)devURL.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-length", String.valueOf(query.length()));
+                con.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                con.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0;Windows98;DigExt)");
+                con.setConnectTimeout(8000);
+                con.setDoOutput(true);
+                con.setDoInput(true);
+
+                DataOutputStream output = new DataOutputStream(con.getOutputStream());
+
+                output.writeBytes(query);
+                output.close();
+
+                DataInputStream input = new DataInputStream(con.getInputStream());
+
+                BufferedReader streamReader = new BufferedReader(new InputStreamReader(input, "UTF-8"));
+                StringBuilder responseStrBuilder = new StringBuilder();
+
+                String inputStr = null;
+                while((inputStr = streamReader.readLine()) != null){
+                    responseStrBuilder.append(inputStr);
+                }
+                System.out.println("Tournaments response: "+responseStrBuilder.toString());
+                try {
+                    resultJSON = new JSONObject(responseStrBuilder.toString());
+                    if(resultJSON.getBoolean("status")){
+//                        HashMap<String, String> tourney = new HashMap<String, String>();
+//                        for(int i = 0; i < resultJSON.length(); i++){
+//                            Tournament tourney = new Tournament();
+//                            tourney.setName(resultJSON)
+//                        }
+                        Iterator<?> keys = resultJSON.keys();
+                        JSONObject tempJObject;
+                        while(keys.hasNext()){
+                            String key = (String)keys.next();
+                            if(!key.equals("status")){
+                                Tournament tourney = new Tournament();
+                                if(resultJSON.get(key) instanceof JSONObject) {
+                                    //System.out.println(resultJSON.get(key).toString());
+                                    tempJObject = (JSONObject) resultJSON.get(key);
+                                    tourney.setName(tempJObject.get("tournament_name").toString());
+                                    tourney.setSize((int) tempJObject.get("size"));
+                                    tourney.setLocation_city(tempJObject.get("location_city").toString());
+                                    tourney.setYear((int) tempJObject.get("year"));
+                                    tourney.setRegion(tempJObject.get("region_name").toString());
+                                    tourney.setAbbreviation(tempJObject.get("abbreviation").toString());
+                                    tourney.setImage_name(tempJObject.get("image_name").toString());
+                                    if (!tourney.getImage_name().equals("")) {
+                                        try {
+//                                            URL imgURL = new URL(imagesURL + tourney.getImage_name());
+//                                            URLConnection imageConn = imgURL.openConnection();
+//                                            imageConn.connect();
+//                                            InputStream is = imageConn.getInputStream();
+//                                            BufferedInputStream bis = new BufferedInputStream(is);
+//                                            photobit = BitmapFactory.decodeStream(bis);
+//                                            bis.close();
+//                                            is.close();
+
+                                            //Drawable thumb = Drawable.createFromStream(imgURL.openStream(), tourney.getImage_name());
+                                            //imagesHash.put(tourney.getImage_name(), photobit);
+                                        } catch (Exception e) {
+//                                            System.out.println("you failed: " + imagesURL + tourney.getImage_name());
+//                                            System.out.println("Hashmap check: " + imagesHash.toString());
+//                                            e.printStackTrace();
+                                        }
+                                    }
+                                    //System.out.println(tourney.toString());
+                                    //tournamentsArray.add(tourney);
+                                }
+                            }
+                        }
+                        //System.out.println(tournamentsArray.toString());
+                        return true;
+                    }
+                }catch(JSONException e){
+                    e.printStackTrace();
+                }
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (MalformedURLException e){
+                e.printStackTrace();
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+
+            return false;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean result) {
+            //mGetTask = null;
+            //System.out.println("Building page...");
+            //buildPage();
+
+            if (result != null) {
+                if(result){
+//                    System.out.println("Building page...");
+//                    buildPage();
+//                    SharedPreferences userPrefs = getSharedPreferences("user", 0);
+//                    SharedPreferences.Editor editor = userPrefs.edit();
+//                    editor.putString("user_email", resultEmail);
+//                    editor.putString("user_token", resultToken);
+//                    editor.putInt("user_id", resultUserID);
+//                    //System.out.println("First: "+resultFirstName+", Last: "+resultLastName);
+//                    editor.putString("user_first_name", resultFirstName);
+//                    editor.putString("user_last_name", resultLastName);
+//                    editor.commit();
+//                    Intent mainActivityIntent = new Intent(loginContext, MainActivity.class);
+//                    startActivity(mainActivityIntent);
+//                    finish();
+                }else{
+//                    mPasswordView.setError(resultMessage);
+//                    mPasswordView.requestFocus();
+                }
+            } else {
+//                mPasswordView.setError(getString(R.string.error_occurred));
+//                mPasswordView.requestFocus();
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            //mGetTask = null;
+        }
+    }
 }

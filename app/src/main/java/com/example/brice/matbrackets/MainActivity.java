@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity
     String token;
     String firstName;
     String lastName;
+    Integer curFragment;
     private UserAuthTask mAuthTask = null;
 
     //private String mobileLoginURL = "https://dev.matbrackets.com/mobile/mobileLogin.php";
@@ -63,10 +64,12 @@ public class MainActivity extends AppCompatActivity
         mobileLoginURL = getString(R.string.target_URL)+"/mobile/mobileLogin.php";
 
         SharedPreferences userPrefs = getSharedPreferences("user", 0);
+        SharedPreferences activityPrefs = getSharedPreferences("activity", 0);
         email = userPrefs.getString("user_email", "");
         token = userPrefs.getString("user_token", "");
         firstName = userPrefs.getString("user_first_name", "");
         lastName = userPrefs.getString("user_last_name", "");
+        curFragment = activityPrefs.getInt("cur_activity", 0);
 
         if(!email.isEmpty() && !token.isEmpty()) {
             checkToken(email, token);
@@ -110,12 +113,29 @@ public class MainActivity extends AppCompatActivity
 //        TextView emailText = (TextView)findViewById(R.id.textViewEmail);
 //        emailText.setText(email);
 
-        displayView(R.id.nav_home);
+        if(curFragment == 0 || curFragment == null){
+            displayView(R.id.nav_home);
+        }else{
+            displayView(curFragment);
+        }
+
     }
 
     @Override
     public void onStart(){
         super.onStart();
+    }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+
+        if(curFragment != null) {
+            SharedPreferences activityPrefs = getSharedPreferences("activity", 0);
+            SharedPreferences.Editor editor = activityPrefs.edit();
+            editor.putInt("current_fragment", curFragment);
+            editor.commit();
+        }
     }
 
     @Override
@@ -186,14 +206,17 @@ public class MainActivity extends AppCompatActivity
             case R.id.nav_home:
                 fragment = new HomeFragment();
                 title  = "MatBrackets";
+                curFragment = R.id.nav_home;
                 break;
             case R.id.nav_my_tournaments:
                 fragment = new MyTournamentsFragment();
                 title = "My Tournaments";
+                curFragment = R.id.nav_my_tournaments;
                 break;
             case R.id.nav_account:
                 fragment = new AccountFragment();
                 title = "Account";
+                curFragment = R.id.nav_account;
                 break;
         }
 
