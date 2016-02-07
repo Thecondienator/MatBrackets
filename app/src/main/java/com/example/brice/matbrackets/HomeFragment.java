@@ -1,15 +1,25 @@
 package com.example.brice.matbrackets;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.CardView;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,6 +36,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -48,6 +60,15 @@ public class HomeFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    private int prefID;
+    private String prefToken;
+    private GetLocalTask mGetLocalTask = null;
+    private ArrayList<Tournament> tournamentsArray;
+
+    private String getLocalTournamentsURL;
+    private String imagesURL;
+    private HashMap<String, Bitmap> imagesHash;
 
     private OnFragmentInteractionListener mListener;
 
@@ -80,6 +101,9 @@ public class HomeFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
+        getLocalTournamentsURL = getString(R.string.target_URL)+"/mobile/getMyTournaments.php";
+        imagesURL = getString(R.string.target_URL)+"/images/";
     }
 
     @Override
@@ -89,6 +113,19 @@ public class HomeFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
+    @Override
+    public void onStart(){
+        super.onStart();
+
+        SharedPreferences userPrefs = this.getActivity().getSharedPreferences("user", 0);
+        prefID = userPrefs.getInt("user_id", 0);
+        prefToken = userPrefs.getString("user_token", "");
+        tournamentsArray = new ArrayList<Tournament>();
+        imagesHash = new HashMap<String, Bitmap>();
+
+        populateLocal(prefID, prefToken);
+    }
+
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
@@ -96,8 +133,115 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    public void populateLocal(){
+    public void populateLocal(int id, String token){
+        if (mGetLocalTask != null) {
+            return;
+        }
 
+        mGetLocalTask = new GetLocalTask(id, token);
+        mGetLocalTask.execute((Void) null);
+    }
+
+    public void buildPage(){
+        LinearLayout mainLayout = (LinearLayout) this.getActivity().findViewById(R.id.localTournamentsLayout);
+        mainLayout.removeAllViews();
+
+        Display display = this.getActivity().getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int width = size.x;
+        int height = size.y;
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                height,
+                LinearLayout.LayoutParams.MATCH_PARENT);
+        mainLayout.setLayoutParams(lp);
+
+        if(tournamentsArray.size() == 0 || tournamentsArray.isEmpty()){
+            CardView cardView = makeDefaultCard();
+            mainLayout.addView(cardView);
+        }
+        // outer for loop
+        for (int i = 0; i < tournamentsArray.size(); i++) {
+            System.out.println(tournamentsArray.get(i).getName());
+            CardView cardView = makeCard(i);
+
+            mainLayout.addView(cardView);
+        }
+    }
+
+    private CardView makeDefaultCard(){
+        CardView cardView = new CardView(this.getContext());
+        cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        cardView.setMinimumHeight(200);
+        cardView.setUseCompatPadding(true);
+
+        TextView tv = makeTextView("There are no tournaments in your area!");
+        cardView.addView(tv);
+        return cardView;
+    }
+
+    private CardView makeCard(int i){
+        String temp;
+        CardView cardView = new CardView(this.getContext());
+        cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        cardView.setMinimumHeight(250);
+        cardView.setUseCompatPadding(true);
+        cardView.setCardElevation(10);
+        cardView.setRadius(10);
+
+        RelativeLayout newRL = new RelativeLayout(this.getContext());
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams params2 = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        newRL.setGravity(Gravity.LEFT);
+
+        ImageView img = new ImageView(this.getContext());
+        if(tournamentsArray.get(i).getImage_name().equals("")) {
+            img.setImageResource(R.drawable.logo);
+        }else{
+            try {
+                img.setImageBitmap(imagesHash.get(tournamentsArray.get(i).getImage_name()));
+            }catch(Exception e){
+                img.setImageResource(R.drawable.logo);
+                e.printStackTrace();
+            }
+        }
+        RelativeLayout.LayoutParams imgParams = new RelativeLayout.LayoutParams(250, 250);
+        img.setLayoutParams(imgParams);
+        img.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        img.setId(R.id.imgViewID);
+        newRL.addView(img);
+
+        params.addRule(RelativeLayout.RIGHT_OF, img.getId());
+
+        temp = " "+String.valueOf(tournamentsArray.get(i).getYear())+" "+tournamentsArray.get(i).getName();
+        TextView tv = makeTextView(temp);
+        tv.setId(R.id.nameViewID);
+        newRL.addView(tv, params);
+
+        params2.addRule(RelativeLayout.RIGHT_OF, img.getId());
+        params2.addRule(RelativeLayout.BELOW, tv.getId());
+
+        temp = "      "+tournamentsArray.get(i).getLocation_city() + ", " + tournamentsArray.get(i).getAbbreviation();
+        TextView locationView = makeTextView(temp);
+        newRL.addView(locationView, params2);
+
+        cardView.addView(newRL);
+        return cardView;
+    }
+
+    private TextView makeTextView(String text){
+        TextView tv = new TextView(this.getContext());
+        tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT));
+        tv.setGravity(Gravity.LEFT);
+        tv.setTextSize(18);
+        tv.setPadding(15, 15, 15, 5);
+        tv.setText(text);
+        return tv;
     }
 
     @Override
@@ -141,6 +285,7 @@ public class HomeFragment extends Fragment {
         private JSONObject resultJSON;
         private final int mID;
         private final String mToken;
+        private Bitmap photobit = null;
 
         GetLocalTask(int id, String token) {
             mID = id;
@@ -157,8 +302,7 @@ public class HomeFragment extends Fragment {
                 query += "token="+URLEncoder.encode(mToken, "UTF-8");
                 System.out.println("Tournaments query: "+query);
 
-                //URL devURL = new URL(getLocalTournamentsURL);
-                URL devURL = new URL("blah");
+                URL devURL = new URL(getLocalTournamentsURL);
                 HttpsURLConnection con = (HttpsURLConnection)devURL.openConnection();
                 con.setRequestMethod("POST");
                 con.setRequestProperty("Content-length", String.valueOf(query.length()));
@@ -198,7 +342,6 @@ public class HomeFragment extends Fragment {
                             if(!key.equals("status")){
                                 Tournament tourney = new Tournament();
                                 if(resultJSON.get(key) instanceof JSONObject) {
-                                    //System.out.println(resultJSON.get(key).toString());
                                     tempJObject = (JSONObject) resultJSON.get(key);
                                     tourney.setName(tempJObject.get("tournament_name").toString());
                                     tourney.setSize((int) tempJObject.get("size"));
@@ -209,25 +352,25 @@ public class HomeFragment extends Fragment {
                                     tourney.setImage_name(tempJObject.get("image_name").toString());
                                     if (!tourney.getImage_name().equals("")) {
                                         try {
-//                                            URL imgURL = new URL(imagesURL + tourney.getImage_name());
-//                                            URLConnection imageConn = imgURL.openConnection();
-//                                            imageConn.connect();
-//                                            InputStream is = imageConn.getInputStream();
-//                                            BufferedInputStream bis = new BufferedInputStream(is);
-//                                            photobit = BitmapFactory.decodeStream(bis);
-//                                            bis.close();
-//                                            is.close();
+                                            URL imgURL = new URL(imagesURL + tourney.getImage_name());
+                                            URLConnection imageConn = imgURL.openConnection();
+                                            imageConn.connect();
+                                            InputStream is = imageConn.getInputStream();
+                                            BufferedInputStream bis = new BufferedInputStream(is);
+                                            photobit = BitmapFactory.decodeStream(bis);
+                                            bis.close();
+                                            is.close();
 
-                                            //Drawable thumb = Drawable.createFromStream(imgURL.openStream(), tourney.getImage_name());
-                                            //imagesHash.put(tourney.getImage_name(), photobit);
+                                            Drawable thumb = Drawable.createFromStream(imgURL.openStream(), tourney.getImage_name());
+                                            imagesHash.put(tourney.getImage_name(), photobit);
                                         } catch (Exception e) {
-//                                            System.out.println("you failed: " + imagesURL + tourney.getImage_name());
-//                                            System.out.println("Hashmap check: " + imagesHash.toString());
-//                                            e.printStackTrace();
+                                            System.out.println("you failed: " + imagesURL + tourney.getImage_name());
+                                            System.out.println("Hashmap check: " + imagesHash.toString());
+                                            e.printStackTrace();
                                         }
                                     }
-                                    //System.out.println(tourney.toString());
-                                    //tournamentsArray.add(tourney);
+                                    System.out.println(tourney.toString());
+                                    tournamentsArray.add(tourney);
                                 }
                             }
                         }
@@ -250,9 +393,9 @@ public class HomeFragment extends Fragment {
 
         @Override
         protected void onPostExecute(final Boolean result) {
-            //mGetTask = null;
-            //System.out.println("Building page...");
-            //buildPage();
+            mGetLocalTask = null;
+            System.out.println("Building page...");
+            buildPage();
 
             if (result != null) {
                 if(result){
@@ -282,7 +425,7 @@ public class HomeFragment extends Fragment {
 
         @Override
         protected void onCancelled() {
-            //mGetTask = null;
+            mGetLocalTask = null;
         }
     }
 }

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -176,7 +175,7 @@ public class MyTournamentsFragment extends Fragment {
     }
 
     private void buildPage() {
-        LinearLayout mainLayout = (LinearLayout) this.getActivity().findViewById(R.id.linearLayout);
+        LinearLayout mainLayout = (LinearLayout) this.getActivity().findViewById(R.id.myTournamentsLayout);
         mainLayout.removeAllViews();
 
         if(tournamentsArray.size() == 0 || tournamentsArray.isEmpty()){
@@ -232,7 +231,7 @@ public class MyTournamentsFragment extends Fragment {
         CardView cardView = new CardView(this.getContext());
         cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
-        cardView.setMinimumHeight(200);
+        cardView.setMinimumHeight(250);
         cardView.setUseCompatPadding(true);
         cardView.setCardElevation(10);
         cardView.setRadius(10);

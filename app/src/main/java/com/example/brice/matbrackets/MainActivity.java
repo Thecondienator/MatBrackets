@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity
         token = userPrefs.getString("user_token", "");
         firstName = userPrefs.getString("user_first_name", "");
         lastName = userPrefs.getString("user_last_name", "");
-        curFragment = activityPrefs.getInt("cur_activity", 0);
+        curFragment = activityPrefs.getInt("current_fragment", 0);
 
         if(!email.isEmpty() && !token.isEmpty()) {
             checkToken(email, token);
