@@ -61,6 +61,8 @@ public class HomeFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
+    private int screenHeight;
+    private int screenWidth;
     private int prefID;
     private String prefToken;
     private GetLocalTask mGetLocalTask = null;
@@ -143,19 +145,25 @@ public class HomeFragment extends Fragment {
     }
 
     public void buildPage(){
-        LinearLayout mainLayout = (LinearLayout) this.getActivity().findViewById(R.id.localTournamentsLayout);
-        mainLayout.removeAllViews();
-
         Display display = this.getActivity().getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
-        int width = size.x;
-        int height = size.y;
+        screenWidth = size.x;
+        screenHeight = size.y;
 
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                height,
-                LinearLayout.LayoutParams.MATCH_PARENT);
-        mainLayout.setLayoutParams(lp);
+        LinearLayout mainLayout = (LinearLayout) this.getActivity().findViewById(R.id.localTournamentsLayout);
+        mainLayout.removeAllViews();
+
+//        Display display = this.getActivity().getWindowManager().getDefaultDisplay();
+//        Point size = new Point();
+//        display.getSize(size);
+//        int width = size.x;
+//        int height = size.y;
+//
+//        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+//                height,
+//                LinearLayout.LayoutParams.MATCH_PARENT);
+//        mainLayout.setLayoutParams(lp);
 
         if(tournamentsArray.size() == 0 || tournamentsArray.isEmpty()){
             CardView cardView = makeDefaultCard();
@@ -187,7 +195,7 @@ public class HomeFragment extends Fragment {
         CardView cardView = new CardView(this.getContext());
         cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
-        cardView.setMinimumHeight(250);
+        cardView.setMinimumHeight(screenHeight/4);
         cardView.setUseCompatPadding(true);
         cardView.setCardElevation(10);
         cardView.setRadius(10);
