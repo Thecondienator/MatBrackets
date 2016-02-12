@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.view.Gravity;
@@ -105,6 +106,9 @@ public class MyTournamentsFragment extends Fragment {
     @Override
     public void onStart(){
         super.onStart();
+
+        FloatingActionButton fab = (FloatingActionButton) this.getActivity().findViewById(R.id.fab);
+        fab.show();
 
         SharedPreferences userPrefs = this.getActivity().getSharedPreferences("user", 0);
         prefID = userPrefs.getInt("user_id", 0);
@@ -421,7 +425,7 @@ public class MyTournamentsFragment extends Fragment {
             if (result != null) {
                 if(result){
 //                    System.out.println("Building page...");
-//                    buildPage();
+//                    buildLocalLayout();
 //                    SharedPreferences userPrefs = getSharedPreferences("user", 0);
 //                    SharedPreferences.Editor editor = userPrefs.edit();
 //                    editor.putString("user_email", resultEmail);

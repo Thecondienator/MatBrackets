@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity
 //        nameText.setText(firstName + " " + lastName);
 //        TextView emailText = (TextView)findViewById(R.id.textViewEmail);
 //        emailText.setText(email);
-
+        System.out.println("Current fragment: "+curFragment);
         if(curFragment == 0 || curFragment == null){
             displayView(R.id.nav_home);
         }else{
@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+        public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
 
@@ -157,6 +157,7 @@ public class MainActivity extends AppCompatActivity
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         SearchView searchView = (SearchView) menu.findItem(R.id.menu_search).getActionView();
         // Assumes current activity is the searchable activity
+        searchView.setSubmitButtonEnabled(true);
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         //searchView.setIconifiedByDefault(false); // Do not iconify the widget; expand it by default
 
@@ -240,6 +241,11 @@ public class MainActivity extends AppCompatActivity
         SharedPreferences.Editor editor = userPrefs.edit();
         editor.clear();
         editor.commit();
+
+        SharedPreferences activityPrefs = getSharedPreferences("activity", 0);
+        SharedPreferences.Editor activityEditor = activityPrefs.edit();
+        activityEditor.clear();
+        activityEditor.commit();
 
         Intent loginActivityIntent = new Intent(this, LoginActivity.class);
         startActivity(loginActivityIntent);

@@ -6,10 +6,18 @@
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:weightSum="1">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Tournaments near you:"
+        android:id="@+id/localTextView" />
+
     <HorizontalScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/localScrollView">
+        android:id="@+id/localScrollView"
+        android:layout_below="@id/localTextView" >
 
         <LinearLayout
             android:orientation="horizontal"
@@ -20,23 +28,28 @@
         </LinearLayout>
     </HorizontalScrollView>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Tournaments you recently viewed:"
+        android:id="@+id/recentTextView"
+        android:layout_below="@id/localScrollView"
+        android:layout_marginTop="100px"/>
+
     <HorizontalScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/recentScrollView"
-        android:layout_below="@id/localScrollView">
+        android:layout_below="@id/recentTextView">
 
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical">
+            android:layout_gravity="center_vertical"
+            android:id="@+id/recentTournamentsLayout">
 
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical" />
         </LinearLayout>
     </HorizontalScrollView>
-
 </RelativeLayout>

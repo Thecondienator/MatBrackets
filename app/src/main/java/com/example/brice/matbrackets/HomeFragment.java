@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.view.Display;
@@ -66,11 +67,15 @@ public class HomeFragment extends Fragment {
     private int prefID;
     private String prefToken;
     private GetLocalTask mGetLocalTask = null;
-    private ArrayList<Tournament> tournamentsArray;
+    private GetRecentTask mGetRecentTask = null;
+    private ArrayList<Tournament> localTournamentsArray;
+    private ArrayList<Tournament> recentTournamentsArray;
 
     private String getLocalTournamentsURL;
+    private String getRecentTournamentsURL;
     private String imagesURL;
-    private HashMap<String, Bitmap> imagesHash;
+    private HashMap<String, Bitmap> localImagesHash;
+    private HashMap<String, Bitmap> recentImagesHash;
 
     private OnFragmentInteractionListener mListener;
 
@@ -104,7 +109,8 @@ public class HomeFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
-        getLocalTournamentsURL = getString(R.string.target_URL)+"/mobile/getMyTournaments.php";
+        getLocalTournamentsURL = getString(R.string.target_URL)+"/mobile/getLocalTournaments.php";
+        getRecentTournamentsURL = getString(R.string.target_URL)+"/mobile/getRecentlyAccessedTournaments.php";
         imagesURL = getString(R.string.target_URL)+"/images/";
     }
 
@@ -119,13 +125,19 @@ public class HomeFragment extends Fragment {
     public void onStart(){
         super.onStart();
 
+        FloatingActionButton fab = (FloatingActionButton) this.getActivity().findViewById(R.id.fab);
+        fab.hide();
+
         SharedPreferences userPrefs = this.getActivity().getSharedPreferences("user", 0);
         prefID = userPrefs.getInt("user_id", 0);
         prefToken = userPrefs.getString("user_token", "");
-        tournamentsArray = new ArrayList<Tournament>();
-        imagesHash = new HashMap<String, Bitmap>();
+        localTournamentsArray = new ArrayList<Tournament>();
+        recentTournamentsArray = new ArrayList<Tournament>();
+        localImagesHash = new HashMap<String, Bitmap>();
+        recentImagesHash = new HashMap<String, Bitmap>();
 
         populateLocal(prefID, prefToken);
+        populateRecent(prefID, prefToken);
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -144,7 +156,16 @@ public class HomeFragment extends Fragment {
         mGetLocalTask.execute((Void) null);
     }
 
-    public void buildPage(){
+    public void populateRecent(int id, String token){
+        if (mGetRecentTask != null) {
+            return;
+        }
+
+        mGetRecentTask = new GetRecentTask(id, token);
+        mGetRecentTask.execute((Void) null);
+    }
+
+    public void buildLocalLayout(){
         Display display = this.getActivity().getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
@@ -154,43 +175,55 @@ public class HomeFragment extends Fragment {
         LinearLayout mainLayout = (LinearLayout) this.getActivity().findViewById(R.id.localTournamentsLayout);
         mainLayout.removeAllViews();
 
-//        Display display = this.getActivity().getWindowManager().getDefaultDisplay();
-//        Point size = new Point();
-//        display.getSize(size);
-//        int width = size.x;
-//        int height = size.y;
-//
-//        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-//                height,
-//                LinearLayout.LayoutParams.MATCH_PARENT);
-//        mainLayout.setLayoutParams(lp);
-
-        if(tournamentsArray.size() == 0 || tournamentsArray.isEmpty()){
-            CardView cardView = makeDefaultCard();
+        if(localTournamentsArray.size() == 0 || localTournamentsArray.isEmpty()){
+            CardView cardView = makeDefaultCard("There are no tournaments in your area!");
             mainLayout.addView(cardView);
         }
         // outer for loop
-        for (int i = 0; i < tournamentsArray.size(); i++) {
-            System.out.println(tournamentsArray.get(i).getName());
-            CardView cardView = makeCard(i);
+        for (int i = 0; i < localTournamentsArray.size(); i++) {
+            System.out.println(localTournamentsArray.get(i).getName());
+            CardView cardView = makeCard(i, localTournamentsArray, localImagesHash);
 
             mainLayout.addView(cardView);
         }
     }
 
-    private CardView makeDefaultCard(){
+    public void buildRecentLayout(){
+        Display display = this.getActivity().getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        screenWidth = size.x;
+        screenHeight = size.y;
+
+        LinearLayout mainLayout = (LinearLayout) this.getActivity().findViewById(R.id.recentTournamentsLayout);
+        mainLayout.removeAllViews();
+
+        if(recentTournamentsArray.size() == 0 || recentTournamentsArray.isEmpty()){
+            CardView cardView = makeDefaultCard("You don't own any tournaments yet!");
+            mainLayout.addView(cardView);
+        }
+        // outer for loop
+        for (int i = 0; i < recentTournamentsArray.size(); i++) {
+            System.out.println(recentTournamentsArray.get(i).getName());
+            CardView cardView = makeCard(i, recentTournamentsArray, recentImagesHash);
+
+            mainLayout.addView(cardView);
+        }
+    }
+
+    private CardView makeDefaultCard(String message){
         CardView cardView = new CardView(this.getContext());
         cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
         cardView.setMinimumHeight(200);
         cardView.setUseCompatPadding(true);
 
-        TextView tv = makeTextView("There are no tournaments in your area!");
+        TextView tv = makeTextView(message);
         cardView.addView(tv);
         return cardView;
     }
 
-    private CardView makeCard(int i){
+    private CardView makeCard(int i, ArrayList<Tournament> array, HashMap<String, Bitmap> hash){
         String temp;
         CardView cardView = new CardView(this.getContext());
         cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -207,11 +240,11 @@ public class HomeFragment extends Fragment {
         newRL.setGravity(Gravity.LEFT);
 
         ImageView img = new ImageView(this.getContext());
-        if(tournamentsArray.get(i).getImage_name().equals("")) {
+        if(array.get(i).getImage_name().equals("")) {
             img.setImageResource(R.drawable.logo);
         }else{
             try {
-                img.setImageBitmap(imagesHash.get(tournamentsArray.get(i).getImage_name()));
+                img.setImageBitmap(hash.get(array.get(i).getImage_name()));
             }catch(Exception e){
                 img.setImageResource(R.drawable.logo);
                 e.printStackTrace();
@@ -225,7 +258,7 @@ public class HomeFragment extends Fragment {
 
         params.addRule(RelativeLayout.RIGHT_OF, img.getId());
 
-        temp = " "+String.valueOf(tournamentsArray.get(i).getYear())+" "+tournamentsArray.get(i).getName();
+        temp = " "+String.valueOf(array.get(i).getYear())+" "+ array.get(i).getName();
         TextView tv = makeTextView(temp);
         tv.setId(R.id.nameViewID);
         newRL.addView(tv, params);
@@ -233,7 +266,7 @@ public class HomeFragment extends Fragment {
         params2.addRule(RelativeLayout.RIGHT_OF, img.getId());
         params2.addRule(RelativeLayout.BELOW, tv.getId());
 
-        temp = "      "+tournamentsArray.get(i).getLocation_city() + ", " + tournamentsArray.get(i).getAbbreviation();
+        temp = "      "+ array.get(i).getLocation_city() + ", " + array.get(i).getAbbreviation();
         TextView locationView = makeTextView(temp);
         newRL.addView(locationView, params2);
 
@@ -308,7 +341,7 @@ public class HomeFragment extends Fragment {
                 String query = "user="+mID;
                 query += "&";
                 query += "token="+URLEncoder.encode(mToken, "UTF-8");
-                System.out.println("Tournaments query: "+query);
+                System.out.println("Local tournaments query: "+query);
 
                 URL devURL = new URL(getLocalTournamentsURL);
                 HttpsURLConnection con = (HttpsURLConnection)devURL.openConnection();
@@ -334,7 +367,7 @@ public class HomeFragment extends Fragment {
                 while((inputStr = streamReader.readLine()) != null){
                     responseStrBuilder.append(inputStr);
                 }
-                System.out.println("Tournaments response: "+responseStrBuilder.toString());
+                System.out.println("Local tournaments response: "+responseStrBuilder.toString());
                 try {
                     resultJSON = new JSONObject(responseStrBuilder.toString());
                     if(resultJSON.getBoolean("status")){
@@ -370,19 +403,19 @@ public class HomeFragment extends Fragment {
                                             is.close();
 
                                             Drawable thumb = Drawable.createFromStream(imgURL.openStream(), tourney.getImage_name());
-                                            imagesHash.put(tourney.getImage_name(), photobit);
+                                            localImagesHash.put(tourney.getImage_name(), photobit);
                                         } catch (Exception e) {
                                             System.out.println("you failed: " + imagesURL + tourney.getImage_name());
-                                            System.out.println("Hashmap check: " + imagesHash.toString());
+                                            System.out.println("Hashmap check: " + localImagesHash.toString());
                                             e.printStackTrace();
                                         }
                                     }
                                     System.out.println(tourney.toString());
-                                    tournamentsArray.add(tourney);
+                                    localTournamentsArray.add(tourney);
                                 }
                             }
                         }
-                        //System.out.println(tournamentsArray.toString());
+                        //System.out.println(localTournamentsArray.toString());
                         return true;
                     }
                 }catch(JSONException e){
@@ -402,32 +435,150 @@ public class HomeFragment extends Fragment {
         @Override
         protected void onPostExecute(final Boolean result) {
             mGetLocalTask = null;
-            System.out.println("Building page...");
-            buildPage();
+            System.out.println("Building local layout...");
+            buildLocalLayout();
 
             if (result != null) {
                 if(result){
-//                    System.out.println("Building page...");
-//                    buildPage();
-//                    SharedPreferences userPrefs = getSharedPreferences("user", 0);
-//                    SharedPreferences.Editor editor = userPrefs.edit();
-//                    editor.putString("user_email", resultEmail);
-//                    editor.putString("user_token", resultToken);
-//                    editor.putInt("user_id", resultUserID);
-//                    //System.out.println("First: "+resultFirstName+", Last: "+resultLastName);
-//                    editor.putString("user_first_name", resultFirstName);
-//                    editor.putString("user_last_name", resultLastName);
-//                    editor.commit();
-//                    Intent mainActivityIntent = new Intent(loginContext, MainActivity.class);
-//                    startActivity(mainActivityIntent);
-//                    finish();
+
                 }else{
-//                    mPasswordView.setError(resultMessage);
-//                    mPasswordView.requestFocus();
+
                 }
             } else {
-//                mPasswordView.setError(getString(R.string.error_occurred));
-//                mPasswordView.requestFocus();
+
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            mGetLocalTask = null;
+        }
+    }
+
+    /**
+     * Represents an asynchronous login/registration task used to authenticate
+     * the user.
+     */
+    public class GetRecentTask extends AsyncTask<Void, Void, Boolean> {
+
+        private JSONObject resultJSON;
+        private final int mID;
+        private final String mToken;
+        private Bitmap photobit = null;
+
+        GetRecentTask(int id, String token) {
+            mID = id;
+            mToken = token;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            // TODO: attempt authentication against a network service.
+
+            try {
+                String query = "user="+mID;
+                query += "&";
+                query += "token="+URLEncoder.encode(mToken, "UTF-8");
+                System.out.println("Recent tournaments query: "+query);
+
+                URL devURL = new URL(getRecentTournamentsURL);
+                HttpsURLConnection con = (HttpsURLConnection)devURL.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("Content-length", String.valueOf(query.length()));
+                con.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+                con.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0;Windows98;DigExt)");
+                con.setConnectTimeout(8000);
+                con.setDoOutput(true);
+                con.setDoInput(true);
+
+                DataOutputStream output = new DataOutputStream(con.getOutputStream());
+
+                output.writeBytes(query);
+                output.close();
+
+                DataInputStream input = new DataInputStream(con.getInputStream());
+
+                BufferedReader streamReader = new BufferedReader(new InputStreamReader(input, "UTF-8"));
+                StringBuilder responseStrBuilder = new StringBuilder();
+
+                String inputStr = null;
+                while((inputStr = streamReader.readLine()) != null){
+                    responseStrBuilder.append(inputStr);
+                }
+                System.out.println("Recent tournaments response: "+responseStrBuilder.toString());
+                try {
+                    resultJSON = new JSONObject(responseStrBuilder.toString());
+                    if(resultJSON.getBoolean("status")){
+                        Iterator<?> keys = resultJSON.keys();
+                        JSONObject tempJObject;
+                        while(keys.hasNext()){
+                            String key = (String)keys.next();
+                            if(!key.equals("status")){
+                                Tournament tourney = new Tournament();
+                                if(resultJSON.get(key) instanceof JSONObject) {
+                                    tempJObject = (JSONObject) resultJSON.get(key);
+                                    tourney.setName(tempJObject.get("tournament_name").toString());
+                                    tourney.setSize((int) tempJObject.get("size"));
+                                    tourney.setLocation_city(tempJObject.get("location_city").toString());
+                                    tourney.setYear((int) tempJObject.get("year"));
+                                    tourney.setRegion(tempJObject.get("region_name").toString());
+                                    tourney.setAbbreviation(tempJObject.get("abbreviation").toString());
+                                    tourney.setImage_name(tempJObject.get("image_name").toString());
+                                    if (!tourney.getImage_name().equals("")) {
+                                        try {
+                                            URL imgURL = new URL(imagesURL + tourney.getImage_name());
+                                            URLConnection imageConn = imgURL.openConnection();
+                                            imageConn.connect();
+                                            InputStream is = imageConn.getInputStream();
+                                            BufferedInputStream bis = new BufferedInputStream(is);
+                                            photobit = BitmapFactory.decodeStream(bis);
+                                            bis.close();
+                                            is.close();
+
+                                            Drawable thumb = Drawable.createFromStream(imgURL.openStream(), tourney.getImage_name());
+                                            recentImagesHash.put(tourney.getImage_name(), photobit);
+                                        } catch (Exception e) {
+                                            System.out.println("you failed: " + imagesURL + tourney.getImage_name());
+                                            System.out.println("Hashmap check: " + recentImagesHash.toString());
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    System.out.println(tourney.toString());
+                                    recentTournamentsArray.add(tourney);
+                                }
+                            }
+                        }
+                        //System.out.println(localTournamentsArray.toString());
+                        return true;
+                    }
+                }catch(JSONException e){
+                    e.printStackTrace();
+                }
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (MalformedURLException e){
+                e.printStackTrace();
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+
+            return false;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean result) {
+            mGetRecentTask = null;
+            System.out.println("Building recent layout...");
+            buildRecentLayout();
+
+            if (result != null) {
+                if(result){
+
+                }else{
+
+                }
+            } else {
+
             }
         }
 

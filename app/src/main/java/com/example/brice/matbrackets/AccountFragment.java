@@ -3,6 +3,7 @@ package com.example.brice.matbrackets;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,6 +74,10 @@ public class AccountFragment extends Fragment {
     @Override
     public void onStart(){
         super.onStart();
+
+        FloatingActionButton fab = (FloatingActionButton) this.getActivity().findViewById(R.id.fab);
+        fab.hide();
+
         expListView = (ExpandableListView) getView().findViewById(R.id.expandableListView);
         prepareListData();
         listAdapter = new ExpandableListAdapter(this.getContext(), listDataHeader, listDataChild);
