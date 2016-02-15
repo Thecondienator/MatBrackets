@@ -8,6 +8,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.TextView;
 
 public class SearchableActivity extends ListActivity {
 
@@ -38,6 +39,9 @@ public class SearchableActivity extends ListActivity {
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
             //doMySearch(query);
+            System.out.println("Query: "+query);
+            TextView tv = (TextView)findViewById(R.id.queryView);
+            tv.setText(query);
         }
     }
 
