@@ -1,6 +1,5 @@
 package com.example.brice.matbrackets;
 
-import android.animation.LayoutTransition;
 import android.app.SearchManager;
 import android.net.Uri;
 import android.support.v4.app.Fragment;

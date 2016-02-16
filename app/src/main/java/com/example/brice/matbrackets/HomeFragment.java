@@ -285,6 +285,14 @@ public class HomeFragment extends Fragment {
         return tv;
     }
 
+    private void addSpinner(int viewID){
+
+    }
+
+    private void removeSpinner(int viewID){
+
+    }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
