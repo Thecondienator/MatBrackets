@@ -3,5 +3,6 @@
     android:label="@string/app_name"
     android:hint="@string/search_hint"
     android:searchSuggestAuthority="com.example.brice.matbrackets.SuggestionsContentProvider"
-    android:searchSuggestIntentAction="android.Intent.action.VIEW" >
+    android:searchSuggestIntentAction="android.Intent.action.VIEW"
+    android:searchSuggestThreshold="2">
 </searchable>

@@ -21,7 +21,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.json.JSONException;
@@ -99,18 +98,12 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        //View header = LayoutInflater.from(this).inflate(R.layout.nav_header_main, null);
-        //navigationView.addHeaderView(header);
         View header = navigationView.getHeaderView(0);
         TextView textName = (TextView) header.findViewById(R.id.textViewName);
         textName.setText(firstName + " " + lastName);
         TextView textEmail = (TextView) header.findViewById(R.id.textViewEmail);
         textEmail.setText(email);
 
-//        TextView nameText = (TextView)findViewById(R.id.textViewName);
-//        nameText.setText(firstName + " " + lastName);
-//        TextView emailText = (TextView)findViewById(R.id.textViewEmail);
-//        emailText.setText(email);
         System.out.println("Current fragment: "+curFragment);
         if(curFragment == 0 || curFragment == null){
             displayView(R.id.nav_home);
@@ -129,12 +122,12 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy(){
         super.onDestroy();
 
-        if(curFragment != null) {
+        //if(curFragment != null) {
             SharedPreferences activityPrefs = getSharedPreferences("activity", 0);
             SharedPreferences.Editor editor = activityPrefs.edit();
             editor.putInt("current_fragment", curFragment);
             editor.commit();
-        }
+        //}
     }
 
     @Override

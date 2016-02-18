@@ -25,6 +25,13 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:id="@+id/localTournamentsLayout">
+            <ProgressBar
+                android:id="@+id/local_progress"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone" />
         </LinearLayout>
     </HorizontalScrollView>
 
@@ -49,6 +56,13 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:id="@+id/recentTournamentsLayout">
+            <ProgressBar
+                android:id="@+id/recent_progress"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone" />
 
         </LinearLayout>
     </HorizontalScrollView>

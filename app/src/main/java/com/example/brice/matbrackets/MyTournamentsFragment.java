@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -67,6 +68,7 @@ public class MyTournamentsFragment extends Fragment {
     private String getMyTournamentsURL;
     private String imagesURL;
     private HashMap<String, Bitmap> imagesHash;
+    private ProgressBar myProgress;
 
     private OnFragmentInteractionListener mListener;
 
@@ -116,11 +118,8 @@ public class MyTournamentsFragment extends Fragment {
         tournamentsArray = new ArrayList<Tournament>();
         imagesHash = new HashMap<String, Bitmap>();
 
+        myProgress = (ProgressBar)getActivity().findViewById(R.id.my_tournaments_progress);
         populateTournaments(prefID, prefToken);
-        //expListView = (ExpandableListView) getView().findViewById(R.id.expandableListView);
-        //prepareListData();
-        //listAdapter = new ExpandableListAdapter(this.getContext(), listDataHeader, listDataChild);
-        //expListView.setAdapter(listAdapter);
     }
 
     @Override
@@ -174,8 +173,13 @@ public class MyTournamentsFragment extends Fragment {
             return;
         }
 
+        showProgress(true);
         mGetTask = new GetTask(id, token, this.getContext());
         mGetTask.execute((Void) null);
+    }
+
+    private void showProgress(final boolean show) {
+        myProgress.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
     private void buildPage() {
@@ -183,21 +187,6 @@ public class MyTournamentsFragment extends Fragment {
         mainLayout.removeAllViews();
 
         if(tournamentsArray.size() == 0 || tournamentsArray.isEmpty()){
-//            CardView cardView = new CardView(this.getContext());
-//            cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-//                    ViewGroup.LayoutParams.MATCH_PARENT));
-//            cardView.setMinimumHeight(200);
-//            cardView.setUseCompatPadding(true);
-//
-//            TextView tv = new TextView(this.getContext());
-//            tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-//                    LinearLayout.LayoutParams.WRAP_CONTENT));
-//            //    tv.setBackgroundResource(R.drawable.cell_shape);
-//            tv.setGravity(Gravity.CENTER);
-//            tv.setTextSize(18);
-//            tv.setPadding(0, 5, 0, 5);
-//            tv.setText("You don't have any tournaments yet!");
-//            cardView.addView(tv);
             CardView cardView = makeDefaultCard();
             mainLayout.addView(cardView);
         }
@@ -206,7 +195,6 @@ public class MyTournamentsFragment extends Fragment {
             CardView cardView = makeCard(i);
 
             mainLayout.addView(cardView);
-            //mainLayout.addView(tv);
         }
     }
 
@@ -218,14 +206,6 @@ public class MyTournamentsFragment extends Fragment {
         cardView.setUseCompatPadding(true);
 
         TextView tv = makeTextView("You don't have any tournaments yet!");
-//        TextView tv = new TextView(this.getContext());
-//        tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-//                LinearLayout.LayoutParams.WRAP_CONTENT));
-//        //    tv.setBackgroundResource(R.drawable.cell_shape);
-//        tv.setGravity(Gravity.CENTER);
-//        tv.setTextSize(18);
-//        tv.setPadding(0, 5, 0, 5);
-//        tv.setText("You don't have any tournaments yet!");
         cardView.addView(tv);
         return cardView;
     }
@@ -245,7 +225,6 @@ public class MyTournamentsFragment extends Fragment {
         RelativeLayout.LayoutParams params2 = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
         newRL.setGravity(Gravity.LEFT);
-        //newRL.setOrientation(LinearLayout.VERTICAL);
 
         ImageView img = new ImageView(this.getContext());
         if(tournamentsArray.get(i).getImage_name().equals("")) {
@@ -277,10 +256,6 @@ public class MyTournamentsFragment extends Fragment {
         temp = "      "+tournamentsArray.get(i).getLocation_city() + ", " + tournamentsArray.get(i).getAbbreviation();
         TextView locationView = makeTextView(temp);
         newRL.addView(locationView, params2);
-
-//        temp = "     " + String.valueOf(tournamentsArray.get(i).getYear());
-//        TextView yearView = makeTextView(temp);
-//        newLL.addView(yearView);
 
         cardView.addView(newRL);
         return cardView;
@@ -354,11 +329,6 @@ public class MyTournamentsFragment extends Fragment {
                 try {
                     resultJSON = new JSONObject(responseStrBuilder.toString());
                     if(resultJSON.getBoolean("status")){
-//                        HashMap<String, String> tourney = new HashMap<String, String>();
-//                        for(int i = 0; i < resultJSON.length(); i++){
-//                            Tournament tourney = new Tournament();
-//                            tourney.setName(resultJSON)
-//                        }
                         Iterator<?> keys = resultJSON.keys();
                         JSONObject tempJObject;
                         while(keys.hasNext()){
@@ -419,32 +389,17 @@ public class MyTournamentsFragment extends Fragment {
         @Override
         protected void onPostExecute(final Boolean result) {
             mGetTask = null;
-            //System.out.println("Building page...");
-            buildPage();
 
             if (result != null) {
                 if(result){
-//                    System.out.println("Building page...");
-//                    buildLocalLayout();
-//                    SharedPreferences userPrefs = getSharedPreferences("user", 0);
-//                    SharedPreferences.Editor editor = userPrefs.edit();
-//                    editor.putString("user_email", resultEmail);
-//                    editor.putString("user_token", resultToken);
-//                    editor.putInt("user_id", resultUserID);
-//                    //System.out.println("First: "+resultFirstName+", Last: "+resultLastName);
-//                    editor.putString("user_first_name", resultFirstName);
-//                    editor.putString("user_last_name", resultLastName);
-//                    editor.commit();
-//                    Intent mainActivityIntent = new Intent(loginContext, MainActivity.class);
-//                    startActivity(mainActivityIntent);
-//                    finish();
+                    showProgress(false);
+                    System.out.println("Building page...");
+                    buildPage();
                 }else{
-//                    mPasswordView.setError(resultMessage);
-//                    mPasswordView.requestFocus();
+
                 }
             } else {
-//                mPasswordView.setError(getString(R.string.error_occurred));
-//                mPasswordView.requestFocus();
+
             }
         }
 

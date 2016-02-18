@@ -5,14 +5,34 @@ import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.MatrixCursor;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Iterator;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class SuggestionsContentProvider extends ContentProvider {
     private static final String[] COLUMNS = {
             "_id", // must include this column
-            SearchManager.SUGGEST_COLUMN_TEXT_1};
+            SearchManager.SUGGEST_COLUMN_TEXT_1,
+            SearchManager.SUGGEST_COLUMN_TEXT_2};
     public MatrixCursor cursor = new MatrixCursor(COLUMNS);
 
     public SuggestionsContentProvider() {
@@ -47,24 +67,15 @@ public class SuggestionsContentProvider extends ContentProvider {
     }
 
     @Override
-    public Cursor query(Uri uri, String[] projection, String selection,
-                        String[] selectionArgs, String sortOrder) {
-        // TODO: Implement this to handle query requests from clients.
-        //throw new UnsupportedOperationException("Not yet implemented");
+    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 
         String query = uri.getLastPathSegment().toLowerCase();
-        System.out.println("Content provider query: "+query);
-        cursor.addRow(new Object[] {1,"Your search: "+query});
+        System.out.println("Content provider query: " + query);
 
-//        ArrayList<String> temp = new ArrayList<String>();
-//        temp.add("Item One");
-//        temp.add("Item Two");
-//        temp.add("Item Three");
-//        temp.add("Random fourth item");
-//
-//        for(int i = 0; i < temp.size(); i++){
-//            cursor.addRow(new Object[] {i,temp.get(i).toString()});
-//        }
+        ArrayList<Tournament> tournamentsArray = getSuggestions(query);
+        for(Tournament tournament: tournamentsArray){
+            cursor.addRow(new Object[] {tournament.getId(), tournament.getYear()+" "+tournament.getName(), tournament.getLocation_city()+", "+tournament.getRegion()});
+        }
 
         MatrixCursor returnMatrix = cursor;
         cursor = new MatrixCursor(COLUMNS);
@@ -77,5 +88,77 @@ public class SuggestionsContentProvider extends ContentProvider {
         // TODO: Implement this to handle requests to update one or more rows.
         //throw new UnsupportedOperationException("Not yet implemented");
         return 0;
+    }
+
+    private ArrayList<Tournament> getSuggestions(String matchText){
+        ArrayList<Tournament> tournamentsArray = new ArrayList<Tournament>();
+        String findTournamentsLikeURL = getContext().getString(R.string.target_URL)+"/mobile/getTournamentsLike.php";
+        JSONObject resultJSON;
+
+        try{
+            String query = "input="+URLEncoder.encode(matchText, "UTF-8");
+            query += "&";
+            query += "max=5";
+            System.out.println("Match query: "+query);
+
+            URL devURL = new URL(findTournamentsLikeURL);
+            HttpsURLConnection con = (HttpsURLConnection)devURL.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-length", String.valueOf(query.length()));
+            con.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+            con.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.0;Windows98;DigExt)");
+            con.setConnectTimeout(8000);
+            con.setDoOutput(true);
+            con.setDoInput(true);
+
+            DataOutputStream output = new DataOutputStream(con.getOutputStream());
+
+            output.writeBytes(query);
+            output.close();
+
+            DataInputStream input = new DataInputStream(con.getInputStream());
+
+            BufferedReader streamReader = new BufferedReader(new InputStreamReader(input, "UTF-8"));
+            StringBuilder responseStrBuilder = new StringBuilder();
+
+            String inputStr = null;
+            while((inputStr = streamReader.readLine()) != null){
+                responseStrBuilder.append(inputStr);
+            }
+            System.out.println("Match response: "+responseStrBuilder.toString());
+            try {
+                resultJSON = new JSONObject(responseStrBuilder.toString());
+                if(resultJSON.getBoolean("status")){
+                    Iterator<?> keys = resultJSON.keys();
+                    JSONObject tempJObject;
+                    while(keys.hasNext()){
+                        String key = (String)keys.next();
+                        if(!key.equals("status")){
+                            Tournament tourney = new Tournament();
+                            if(resultJSON.get(key) instanceof JSONObject) {
+                                tempJObject = (JSONObject) resultJSON.get(key);
+                                tourney.setName(tempJObject.get("tournament_name").toString());
+                                tourney.setSize((int) tempJObject.get("size"));
+                                tourney.setLocation_city(tempJObject.get("location_city").toString());
+                                tourney.setYear((int) tempJObject.get("year"));
+                                tourney.setRegion(tempJObject.get("region_name").toString());
+                                tourney.setAbbreviation(tempJObject.get("abbreviation").toString());
+                                tournamentsArray.add(tourney);
+                            }
+                        }
+                    }
+                }
+            }catch(JSONException e){
+                e.printStackTrace();
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e){
+            e.printStackTrace();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
+        return tournamentsArray;
     }
 }

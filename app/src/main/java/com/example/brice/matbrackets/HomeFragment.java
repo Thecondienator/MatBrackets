@@ -1,5 +1,7 @@
 package com.example.brice.matbrackets;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -8,6 +10,7 @@ import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -19,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -77,6 +81,9 @@ public class HomeFragment extends Fragment {
     private HashMap<String, Bitmap> localImagesHash;
     private HashMap<String, Bitmap> recentImagesHash;
 
+    private ProgressBar localProgress;
+    private ProgressBar recentProgress;
+
     private OnFragmentInteractionListener mListener;
 
     public HomeFragment() {
@@ -112,6 +119,12 @@ public class HomeFragment extends Fragment {
         getLocalTournamentsURL = getString(R.string.target_URL)+"/mobile/getLocalTournaments.php";
         getRecentTournamentsURL = getString(R.string.target_URL)+"/mobile/getRecentlyAccessedTournaments.php";
         imagesURL = getString(R.string.target_URL)+"/images/";
+
+        Display display = this.getActivity().getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        screenWidth = size.x;
+        screenHeight = size.y;
     }
 
     @Override
@@ -136,8 +149,19 @@ public class HomeFragment extends Fragment {
         localImagesHash = new HashMap<String, Bitmap>();
         recentImagesHash = new HashMap<String, Bitmap>();
 
+        localProgress = (ProgressBar)getActivity().findViewById(R.id.local_progress);
+        recentProgress = (ProgressBar)getActivity().findViewById(R.id.recent_progress);
         populateLocal(prefID, prefToken);
         populateRecent(prefID, prefToken);
+    }
+
+    private void showProgress(final boolean show, ProgressBar progress) {
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+        progress.setMinimumHeight(screenHeight/4);
+            progress.setVisibility(show ? View.VISIBLE : View.GONE);
+        //} else {
+        //    progress.setVisibility(show ? View.VISIBLE : View.GONE);
+        //}
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -152,6 +176,7 @@ public class HomeFragment extends Fragment {
             return;
         }
 
+        showProgress(true, localProgress);
         mGetLocalTask = new GetLocalTask(id, token);
         mGetLocalTask.execute((Void) null);
     }
@@ -161,17 +186,12 @@ public class HomeFragment extends Fragment {
             return;
         }
 
+        showProgress(true, recentProgress);
         mGetRecentTask = new GetRecentTask(id, token);
         mGetRecentTask.execute((Void) null);
     }
 
     public void buildLocalLayout(){
-        Display display = this.getActivity().getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        screenWidth = size.x;
-        screenHeight = size.y;
-
         LinearLayout mainLayout = (LinearLayout) this.getActivity().findViewById(R.id.localTournamentsLayout);
         mainLayout.removeAllViews();
 
@@ -189,12 +209,6 @@ public class HomeFragment extends Fragment {
     }
 
     public void buildRecentLayout(){
-        Display display = this.getActivity().getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        screenWidth = size.x;
-        screenHeight = size.y;
-
         LinearLayout mainLayout = (LinearLayout) this.getActivity().findViewById(R.id.recentTournamentsLayout);
         mainLayout.removeAllViews();
 
@@ -379,11 +393,6 @@ public class HomeFragment extends Fragment {
                 try {
                     resultJSON = new JSONObject(responseStrBuilder.toString());
                     if(resultJSON.getBoolean("status")){
-//                        HashMap<String, String> tourney = new HashMap<String, String>();
-//                        for(int i = 0; i < resultJSON.length(); i++){
-//                            Tournament tourney = new Tournament();
-//                            tourney.setName(resultJSON)
-//                        }
                         Iterator<?> keys = resultJSON.keys();
                         JSONObject tempJObject;
                         while(keys.hasNext()){
@@ -443,12 +452,12 @@ public class HomeFragment extends Fragment {
         @Override
         protected void onPostExecute(final Boolean result) {
             mGetLocalTask = null;
-            System.out.println("Building local layout...");
-            buildLocalLayout();
 
             if (result != null) {
                 if(result){
-
+                    showProgress(false, localProgress);
+                    System.out.println("Building local layout...");
+                    buildLocalLayout();
                 }else{
 
                 }
@@ -481,7 +490,6 @@ public class HomeFragment extends Fragment {
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
 
             try {
                 String query = "user="+mID;
@@ -576,12 +584,12 @@ public class HomeFragment extends Fragment {
         @Override
         protected void onPostExecute(final Boolean result) {
             mGetRecentTask = null;
-            System.out.println("Building recent layout...");
-            buildRecentLayout();
 
             if (result != null) {
                 if(result){
-
+                    showProgress(false, recentProgress);
+                    System.out.println("Building recent layout...");
+                    buildRecentLayout();
                 }else{
 
                 }
