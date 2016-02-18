@@ -46,6 +46,12 @@
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
         </activity>
+
+        <provider
+            android:name=".SuggestionsContentProvider"
+            android:authorities="com.example.brice.matbrackets.SuggestionsContentProvider"
+            android:enabled="true"
+            android:exported="true"></provider>
     </application>
 
 </manifest>
