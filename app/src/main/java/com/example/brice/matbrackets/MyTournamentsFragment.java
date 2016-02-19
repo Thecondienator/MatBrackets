@@ -289,6 +289,8 @@ public class MyTournamentsFragment extends Fragment {
         {
             Intent intent = new Intent(v.getContext(), ViewTournamentActivity.class);
             intent.putExtra("tournament_id", tournamentsArray.get(index).getId());
+            intent.putExtra("tournament_name", tournamentsArray.get(index).getName());
+            intent.putExtra("tournament_year", tournamentsArray.get(index).getYear());
             startActivity(intent);
         }
     }

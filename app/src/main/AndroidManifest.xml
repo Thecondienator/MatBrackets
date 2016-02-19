@@ -56,7 +56,8 @@
         <activity
             android:name=".ViewTournamentActivity"
             android:label="@string/title_activity_view_tournament"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".PurchaseActivity"></activity>
     </application>
 
 </manifest>

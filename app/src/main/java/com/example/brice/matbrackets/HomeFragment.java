@@ -3,6 +3,7 @@ package com.example.brice.matbrackets;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -197,7 +198,11 @@ public class HomeFragment extends Fragment {
         for (int i = 0; i < localTournamentsArray.size(); i++) {
             System.out.println(localTournamentsArray.get(i).getName());
             CardView cardView = makeCard(i, localTournamentsArray, localImagesHash);
-
+            if(localTournamentsArray.get(i).isViewable()){
+                setListener(cardView, localTournamentsArray, i);
+            }else{
+                setPurchaseListener(cardView, localTournamentsArray, i);
+            }
             mainLayout.addView(cardView);
         }
     }
@@ -214,7 +219,11 @@ public class HomeFragment extends Fragment {
         for (int i = 0; i < recentTournamentsArray.size(); i++) {
             System.out.println(recentTournamentsArray.get(i).getName());
             CardView cardView = makeCard(i, recentTournamentsArray, recentImagesHash);
-
+            if (recentTournamentsArray.get(i).isViewable()){
+                setListener(cardView, recentTournamentsArray, i);
+            }else{
+                setPurchaseListener(cardView, recentTournamentsArray, i);
+            }
             mainLayout.addView(cardView);
         }
     }
@@ -297,6 +306,56 @@ public class HomeFragment extends Fragment {
         tv.setPadding(15, 15, 15, 5);
         tv.setText(text);
         return tv;
+    }
+
+    private void setListener(CardView cv, ArrayList<Tournament> array, int i){
+        cv.setOnClickListener(new SpecialOnClickListener(i, array) {});
+    }
+
+    private class SpecialOnClickListener implements View.OnClickListener{
+        int index;
+        ArrayList<Tournament> tournamentsArray;
+        public SpecialOnClickListener(int arrayIndex, ArrayList<Tournament> array) {
+            this.index = arrayIndex;
+            this.tournamentsArray = array;
+        }
+
+        @Override
+        public void onClick(View v)
+        {
+            Intent intent = new Intent(v.getContext(), ViewTournamentActivity.class);
+            intent.putExtra("tournament_id", tournamentsArray.get(index).getId());
+            intent.putExtra("tournament_name", tournamentsArray.get(index).getName());
+            intent.putExtra("tournament_year", tournamentsArray.get(index).getYear());
+            startActivity(intent);
+        }
+    }
+
+    private void setPurchaseListener(CardView cv, ArrayList<Tournament> array, int i){
+        cv.setOnClickListener(new PurchaseOnClickListener(i, array) {});
+    }
+
+    private class PurchaseOnClickListener implements View.OnClickListener{
+        int index;
+        ArrayList<Tournament> tournamentsArray;
+        public PurchaseOnClickListener(int arrayIndex, ArrayList<Tournament> array) {
+            this.index = arrayIndex;
+            this.tournamentsArray = array;
+        }
+
+        @Override
+        public void onClick(View v)
+        {
+            Intent intent = new Intent(v.getContext(), PurchaseActivity.class);
+            intent.putExtra("tournament_id", tournamentsArray.get(index).getId());
+            intent.putExtra("tournament_name", tournamentsArray.get(index).getName());
+            intent.putExtra("tournament_year", tournamentsArray.get(index).getYear());
+            intent.putExtra("tournament_city", tournamentsArray.get(index).getLocation_city());
+            intent.putExtra("tournament_region", tournamentsArray.get(index).getRegion());
+            intent.putExtra("tournament_abbreviation", tournamentsArray.get(index).getAbbreviation());
+            intent.putExtra("tournament_image", tournamentsArray.get(index).getImage_name());
+            startActivity(intent);
+        }
     }
 
     private void addSpinner(int viewID){
@@ -401,6 +460,7 @@ public class HomeFragment extends Fragment {
                                 Tournament tourney = new Tournament();
                                 if(resultJSON.get(key) instanceof JSONObject) {
                                     tempJObject = (JSONObject) resultJSON.get(key);
+                                    tourney.setId((int)tempJObject.get("id"));
                                     tourney.setName(tempJObject.get("tournament_name").toString());
                                     tourney.setSize((int) tempJObject.get("size"));
                                     tourney.setLocation_city(tempJObject.get("location_city").toString());
@@ -408,6 +468,7 @@ public class HomeFragment extends Fragment {
                                     tourney.setRegion(tempJObject.get("region_name").toString());
                                     tourney.setAbbreviation(tempJObject.get("abbreviation").toString());
                                     tourney.setImage_name(tempJObject.get("image_name").toString());
+                                    tourney.setViewable((boolean) tempJObject.get("is_viewer"));
                                     if (!tourney.getImage_name().equals("")) {
                                         try {
                                             URL imgURL = new URL(imagesURL + tourney.getImage_name());
@@ -533,6 +594,7 @@ public class HomeFragment extends Fragment {
                                 Tournament tourney = new Tournament();
                                 if(resultJSON.get(key) instanceof JSONObject) {
                                     tempJObject = (JSONObject) resultJSON.get(key);
+                                    tourney.setId((int)tempJObject.get("id"));
                                     tourney.setName(tempJObject.get("tournament_name").toString());
                                     tourney.setSize((int) tempJObject.get("size"));
                                     tourney.setLocation_city(tempJObject.get("location_city").toString());
@@ -540,6 +602,7 @@ public class HomeFragment extends Fragment {
                                     tourney.setRegion(tempJObject.get("region_name").toString());
                                     tourney.setAbbreviation(tempJObject.get("abbreviation").toString());
                                     tourney.setImage_name(tempJObject.get("image_name").toString());
+                                    tourney.setViewable((boolean)tempJObject.get("is_viewer"));
                                     if (!tourney.getImage_name().equals("")) {
                                         try {
                                             URL imgURL = new URL(imagesURL + tourney.getImage_name());

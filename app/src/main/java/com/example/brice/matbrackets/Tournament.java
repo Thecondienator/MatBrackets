@@ -13,6 +13,7 @@ public class Tournament {
     private int year;
     private float cost;
     private String image_name;
+    private boolean viewable;
 
     public String getImage_name() {
         return image_name;
@@ -92,6 +93,14 @@ public class Tournament {
 
     public void setAbbreviation(String abbreviation) {
         this.abbreviation = abbreviation;
+    }
+
+    public boolean isViewable() {
+        return viewable;
+    }
+
+    public void setViewable(boolean viewable) {
+        this.viewable = viewable;
     }
 
     @Override
