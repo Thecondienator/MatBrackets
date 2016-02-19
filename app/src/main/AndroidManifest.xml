@@ -51,7 +51,12 @@
             android:name=".SuggestionsContentProvider"
             android:authorities="com.example.brice.matbrackets.SuggestionsContentProvider"
             android:enabled="true"
-            android:exported="true"></provider>
+            android:exported="true" />
+
+        <activity
+            android:name=".ViewTournamentActivity"
+            android:label="@string/title_activity_view_tournament"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

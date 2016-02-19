@@ -3,6 +3,7 @@ package com.example.brice.matbrackets;
 import android.app.SearchManager;
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.graphics.BitmapFactory;
@@ -68,15 +69,13 @@ public class SuggestionsContentProvider extends ContentProvider {
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-
         String query = uri.getLastPathSegment().toLowerCase();
-        System.out.println("Content provider query: " + query);
-
-        ArrayList<Tournament> tournamentsArray = getSuggestions(query);
-        for(Tournament tournament: tournamentsArray){
-            cursor.addRow(new Object[] {tournament.getId(), tournament.getYear()+" "+tournament.getName(), tournament.getLocation_city()+", "+tournament.getRegion()});
+        if(!query.equals("search_suggest_query")){
+            ArrayList<Tournament> tournamentsArray = getSuggestions(query);
+            for(Tournament tournament: tournamentsArray){
+                cursor.addRow(new Object[] {tournament.getId(), tournament.getYear()+" "+tournament.getName(), tournament.getLocation_city()+", "+tournament.getRegion()});
+            }
         }
-
         MatrixCursor returnMatrix = cursor;
         cursor = new MatrixCursor(COLUMNS);
         return returnMatrix;
@@ -95,10 +94,13 @@ public class SuggestionsContentProvider extends ContentProvider {
         String findTournamentsLikeURL = getContext().getString(R.string.target_URL)+"/mobile/getTournamentsLike.php";
         JSONObject resultJSON;
 
+        SharedPreferences userPrefs = getContext().getSharedPreferences("user", 0);
+        int user_id = userPrefs.getInt("user_id", 0);
+
         try{
             String query = "input="+URLEncoder.encode(matchText, "UTF-8");
             query += "&";
-            query += "max=5";
+            query += "user="+user_id;
             System.out.println("Match query: "+query);
 
             URL devURL = new URL(findTournamentsLikeURL);

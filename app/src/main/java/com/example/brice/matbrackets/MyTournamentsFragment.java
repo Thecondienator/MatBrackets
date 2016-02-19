@@ -1,6 +1,8 @@
 package com.example.brice.matbrackets;
 
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -64,7 +66,6 @@ public class MyTournamentsFragment extends Fragment {
     private GetTask mGetTask = null;
     private ArrayList<Tournament> tournamentsArray;
 
-    //private String getMyTournamentsURL = "https://dev.matbrackets.com/mobile/myTournaments.php";
     private String getMyTournamentsURL;
     private String imagesURL;
     private HashMap<String, Bitmap> imagesHash;
@@ -173,7 +174,7 @@ public class MyTournamentsFragment extends Fragment {
             return;
         }
 
-        showProgress(true);
+        //showProgress(true);
         mGetTask = new GetTask(id, token, this.getContext());
         mGetTask.execute((Void) null);
     }
@@ -193,7 +194,7 @@ public class MyTournamentsFragment extends Fragment {
         // outer for loop
         for (int i = 0; i < tournamentsArray.size(); i++) {
             CardView cardView = makeCard(i);
-
+            setListener(cardView, i);
             mainLayout.addView(cardView);
         }
     }
@@ -273,6 +274,25 @@ public class MyTournamentsFragment extends Fragment {
         return tv;
     }
 
+    private void setListener(CardView cv, int i){
+        cv.setOnClickListener(new SpecialOnClickListener(i) {});
+    }
+
+    private class SpecialOnClickListener implements View.OnClickListener{
+        int index;
+        public SpecialOnClickListener(int arrayIndex) {
+            this.index = arrayIndex;
+        }
+
+        @Override
+        public void onClick(View v)
+        {
+            Intent intent = new Intent(v.getContext(), ViewTournamentActivity.class);
+            intent.putExtra("tournament_id", tournamentsArray.get(index).getId());
+            startActivity(intent);
+        }
+    }
+
     /**
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
@@ -338,6 +358,7 @@ public class MyTournamentsFragment extends Fragment {
                                 if(resultJSON.get(key) instanceof JSONObject) {
                                     //System.out.println(resultJSON.get(key).toString());
                                     tempJObject = (JSONObject) resultJSON.get(key);
+                                    tourney.setId((int)tempJObject.get("tournament_id"));
                                     tourney.setName(tempJObject.get("tournament_name").toString());
                                     tourney.setSize((int) tempJObject.get("size"));
                                     tourney.setLocation_city(tempJObject.get("location_city").toString());
@@ -392,7 +413,7 @@ public class MyTournamentsFragment extends Fragment {
 
             if (result != null) {
                 if(result){
-                    showProgress(false);
+                    //showProgress(false);
                     System.out.println("Building page...");
                     buildPage();
                 }else{

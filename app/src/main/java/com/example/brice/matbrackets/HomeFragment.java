@@ -119,12 +119,6 @@ public class HomeFragment extends Fragment {
         getLocalTournamentsURL = getString(R.string.target_URL)+"/mobile/getLocalTournaments.php";
         getRecentTournamentsURL = getString(R.string.target_URL)+"/mobile/getRecentlyAccessedTournaments.php";
         imagesURL = getString(R.string.target_URL)+"/images/";
-
-        Display display = this.getActivity().getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        screenWidth = size.x;
-        screenHeight = size.y;
     }
 
     @Override
@@ -157,7 +151,7 @@ public class HomeFragment extends Fragment {
 
     private void showProgress(final boolean show, ProgressBar progress) {
         //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-        progress.setMinimumHeight(screenHeight/4);
+        //progress.setMinimumHeight(screenHeight/4);
             progress.setVisibility(show ? View.VISIBLE : View.GONE);
         //} else {
         //    progress.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -176,7 +170,7 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        showProgress(true, localProgress);
+        //showProgress(true, localProgress);
         mGetLocalTask = new GetLocalTask(id, token);
         mGetLocalTask.execute((Void) null);
     }
@@ -186,7 +180,7 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        showProgress(true, recentProgress);
+        //showProgress(true, recentProgress);
         mGetRecentTask = new GetRecentTask(id, token);
         mGetRecentTask.execute((Void) null);
     }
@@ -238,6 +232,12 @@ public class HomeFragment extends Fragment {
     }
 
     private CardView makeCard(int i, ArrayList<Tournament> array, HashMap<String, Bitmap> hash){
+        Display display = this.getActivity().getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        screenWidth = size.x;
+        screenHeight = size.y;
+
         String temp;
         CardView cardView = new CardView(this.getContext());
         cardView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -455,7 +455,7 @@ public class HomeFragment extends Fragment {
 
             if (result != null) {
                 if(result){
-                    showProgress(false, localProgress);
+                    //showProgress(false, localProgress);
                     System.out.println("Building local layout...");
                     buildLocalLayout();
                 }else{
@@ -587,7 +587,7 @@ public class HomeFragment extends Fragment {
 
             if (result != null) {
                 if(result){
-                    showProgress(false, recentProgress);
+                    //showProgress(false, recentProgress);
                     System.out.println("Building recent layout...");
                     buildRecentLayout();
                 }else{

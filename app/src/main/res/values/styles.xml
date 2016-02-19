@@ -28,6 +28,7 @@
     <style name="mySearchResult" parent="TextAppearance.AppCompat.SearchResult.Title">
         <item name="android:textColor">@color/colorPrimary</item>
     </style>
+
     <style name="mySearchResultSub" parent="TextAppearance.AppCompat.SearchResult.Subtitle">
         <item name="android:textColor">@color/colorPrimaryDark</item>
     </style>
